@@ -1,0 +1,32 @@
+export function debounce(func, wait) {
+	let timeout;
+	return function executedFunction(...args) {
+		const later = () => {
+			clearTimeout(timeout);
+			func(...args);
+		};
+		clearTimeout(timeout);
+		timeout = setTimeout(later, wait);
+	};
+}
+
+export function throttle(func, limit) {
+	let inThrottle;
+	return function (...args) {
+		if (!inThrottle) {
+			func.apply(this, args);
+			inThrottle = true;
+			setTimeout(() => {
+				inThrottle = false;
+			}, limit);
+		}
+	};
+}
+
+export function getTimestamp() {
+	return new Date().toISOString().replace("T", " ").split(".")[0];
+}
+
+export function prefersDarkMode() {
+	return window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ?? false;
+}

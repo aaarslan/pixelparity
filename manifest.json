@@ -1,0 +1,39 @@
+{
+	"manifest_version": 3,
+	"name": "PixelParity - Precision Display Metrics",
+	"short_name": "PixelParity",
+	"version": "1.0.0",
+	"description": "Display metrics tool for developers. Access viewport dimensions, screen resolution, zoom levels, and responsive breakpoints.",
+	"author": "aaarslan",
+	"homepage_url": "https://github.com/aaarslan/pixelparity",
+	"permissions": ["storage", "scripting", "tabs", "activeTab"],
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "assets/icons/icon16.png",
+			"32": "assets/icons/icon32.png",
+			"48": "assets/icons/icon48.png",
+			"128": "assets/icons/icon128.png",
+			"256": "assets/icons/icon256.png",
+			"512": "assets/icons/icon512.png"
+		},
+		"default_title": "PixelParity - Click for display metrics (Alt+Shift+V)"
+	},
+	"icons": {
+		"16": "assets/icons/icon16.png",
+		"32": "assets/icons/icon32.png",
+		"48": "assets/icons/icon48.png",
+		"128": "assets/icons/icon128.png",
+		"256": "assets/icons/icon256.png",
+		"512": "assets/icons/icon512.png"
+	},
+	"commands": {
+		"_execute_action": {
+			"suggested_key": {
+				"default": "Alt+Shift+V",
+				"mac": "Alt+Shift+V"
+			},
+			"description": "Open PixelParity"
+		}
+	}
+}

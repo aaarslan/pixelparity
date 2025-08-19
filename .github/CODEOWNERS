@@ -1,0 +1,15 @@
+# Global code owner for PixelParity
+* @aaarslan
+
+# Critical extension files requiring extra review
+manifest.json @aaarslan
+popup.html @aaarslan
+popup.js @aaarslan
+js/metrics-detector.js @aaarslan
+
+# Privacy and security-related files
+PRIVACY.md @aaarslan
+README.md @aaarslan
+
+# Build and configuration files
+package.json @aaarslan
