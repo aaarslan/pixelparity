@@ -18,7 +18,6 @@ async function clean() {
 }
 
 async function buildJS() {
-	// Bundle popup.js and all imported modules into a single ESM file
 	await esbuild.build({
 		entryPoints: [path.join(srcDir, "popup.js")],
 		bundle: true,
@@ -48,7 +47,6 @@ async function buildCSS() {
 async function buildHTML() {
 	const htmlPath = path.join(srcDir, "popup.html");
 	const html = await readFile(htmlPath, "utf8");
-	// HTML minification; leave external links as-is
 	const minified = await minifyHtml(html, {
 		collapseWhitespace: true,
 		removeComments: true,
@@ -64,11 +62,6 @@ async function buildHTML() {
 async function writeManifest() {
 	const manifestPath = path.join(srcDir, "manifest.json");
 	const json = JSON.parse(await readFile(manifestPath, "utf8"));
-	// Ensure no over-privileged permissions leak into dist
-	if (Array.isArray(json.permissions)) {
-		json.permissions = json.permissions.filter((p) => p !== "tabs");
-	}
-	// Write compacted manifest to save bytes
 	await writeFile(path.join(distDir, "manifest.json"), JSON.stringify(json));
 }
 
@@ -80,12 +73,11 @@ async function copyAndOptimizeIcons() {
 	const files = (await readdir(srcIconsDir)).filter((f) => f.endsWith(".png"));
 	const inputs = files.map((f) => path.join(srcIconsDir, f));
 
-	// Optimize PNGs with sensible defaults
 	const optimized = await imagemin(inputs, {
 		destination: outIconsDir,
 		plugins: [imageminPngquant({ quality: [0.6, 0.8], strip: true })],
 	});
-	// If imagemin skipped any file for some reason, just copy as fallback
+
 	const optimizedNames = new Set(
 		optimized.map((o) => path.basename(o.sourcePath)),
 	);

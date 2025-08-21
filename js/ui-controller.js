@@ -36,7 +36,6 @@ export class UIController {
 		this.hideAllStates();
 		this.elements.loadingState.classList.remove("hidden");
 		this.elements.loadingState.removeAttribute("aria-hidden");
-		// Ensure popup starts at top when loading
 		if (this.elements.appMain) {
 			this.elements.appMain.scrollTop = 0;
 		}
@@ -48,7 +47,6 @@ export class UIController {
 		if (this.elements.errorMessage) {
 			this.elements.errorMessage.textContent = message;
 		}
-		// Keep view at the top and avoid scroll jumps on focus
 		if (this.elements.appMain) {
 			this.elements.appMain.scrollTop = 0;
 		}
@@ -58,7 +56,6 @@ export class UIController {
 		this.hideAllStates();
 		this.elements.successState.classList.remove("hidden");
 		this.elements.successState.removeAttribute("aria-hidden");
-		// Keep view at the top and avoid scroll jumps on focus
 		if (this.elements.appMain) {
 			this.elements.appMain.scrollTop = 0;
 		}

@@ -62,12 +62,14 @@ When you click the extension icon, PixelParity:
 
 1. **Executes a measurement script** in your current browser tab
 2. **Reads standard browser properties** including:
-   - Viewport dimensions (window.innerWidth, window.innerHeight)
-   - Screen resolution (screen.width, screen.height)
-   - Device pixel ratio (window.devicePixelRatio)
-   - Browser zoom level (calculated from viewport vs. screen)
-   - Document dimensions (document.body.scrollWidth/Height)
-   - Root font size (computed CSS properties)
+
+- Viewport dimensions (window.innerWidth, window.innerHeight)
+- Screen resolution (screen.width, screen.height)
+- Device pixel ratio (window.devicePixelRatio)
+- Browser zoom level (calculated from viewport vs. screen)
+- Document dimensions (document.body.scrollWidth/Height)
+- Root font size (computed CSS properties)
+
 3. **Displays results immediately** in the extension popup
 4. **Discards all data** when you close the popup
 
@@ -102,23 +104,11 @@ absolute minimum necessary:
 - **Limitation**: Script only reads browser dimensions, nothing else
 - **No Access To**: Page content, user data, or persistent storage
 
-### **`tabs`** - Identify Active Tab
-
-- **Purpose**: Determines which tab to measure and ensures compatibility
-- **Limitation**: Only accesses basic tab metadata (ID, URL)
-- **No Access To**: Tab content, history, or cross-tab information
-
 ### **`storage`** - Save User Preferences
 
 - **Purpose**: Remembers your theme and layout preferences
 - **Limitation**: Only stores settings, no user data
 - **Storage Type**: Chrome's secure local storage (chrome.storage.sync/local)
-
-### **`clipboardWrite`** - Export Functionality
-
-- **Purpose**: Enables copying metrics in JSON, CSS, or table formats
-- **Limitation**: Can only write to clipboard, cannot read clipboard content
-- **No Access To**: Existing clipboard data or other applications
 
 ## Data Storage and Retention
 

@@ -70,11 +70,11 @@ Note: The popup displays the proper modifier for your OS automatically.
 
 From `manifest.json` (MV3):
 
-- `activeTab` — Access the current tab only when you interact with the extension
-- `tabs` — Read the active tab id and basic info to target script injection
-- `scripting` — Inject the metrics function into the active tab
-- `storage` — Persist lightweight settings (theme, compact mode) and last
-  metrics locally
+- `activeTab` — Access the current tab only when you interact with the
+  extension.
+- `scripting` — Inject the metrics function into the active tab to read display
+  properties.
+- `storage` — Persist lightweight settings (theme, compact mode) locally.
 
 No remote code, no analytics, no network calls.
 

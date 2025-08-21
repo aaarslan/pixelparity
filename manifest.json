@@ -28,7 +28,7 @@
 		"512": "assets/icons/icon512.png"
 	},
 	"content_security_policy": {
-		"extension_pages": "script-src 'self'; object-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
+		"extension_pages": "script-src 'self'; object-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self'"
 	},
 	"commands": {
 		"_execute_action": {

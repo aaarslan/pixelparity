@@ -7,6 +7,7 @@ export class PixelParityApp {
 		this.metricsDetector = new MetricsDetector();
 		this.uiController = new UIController();
 		this.isInitialized = false;
+		this.feedbackTimer = null;
 	}
 	async init() {
 		try {
@@ -100,14 +101,12 @@ export class PixelParityApp {
 			refreshBtn.classList.add("active");
 		}
 
-		// Save scroll position before refresh
-		const mainContainer = document.querySelector('.app-main');
+		const mainContainer = document.querySelector(".app-main");
 		const scrollPosition = mainContainer ? mainContainer.scrollTop : 0;
 
 		try {
 			await this.detectAndRenderMetrics();
-			
-			// Restore scroll position after refresh
+
 			if (mainContainer) {
 				mainContainer.scrollTop = scrollPosition;
 			}
@@ -134,7 +133,7 @@ export class PixelParityApp {
 		this.uiController.showError(message);
 	}
 	async copyAsJson() {
-		this.animateButton('copyJsonBtn');
+		this.animateButton("copyJsonBtn");
 		try {
 			const metrics = await this.metricsDetector.getLastMetrics();
 			if (!metrics) throw new Error("No metrics available");
@@ -151,7 +150,7 @@ export class PixelParityApp {
 		}
 	}
 	async copyAsCss() {
-		this.animateButton('copyCssBtn');
+		this.animateButton("copyCssBtn");
 		try {
 			const metrics = await this.metricsDetector.getLastMetrics();
 			if (!metrics) throw new Error("No metrics available");
@@ -164,7 +163,7 @@ export class PixelParityApp {
 		}
 	}
 	async copyAsTable() {
-		this.animateButton('copyTableBtn');
+		this.animateButton("copyTableBtn");
 		try {
 			const metrics = await this.metricsDetector.getLastMetrics();
 			if (!metrics) throw new Error("No metrics available");
@@ -242,9 +241,9 @@ export class PixelParityApp {
 	animateButton(elementKey) {
 		const element = this.uiController.elements[elementKey];
 		if (element) {
-			element.style.transform = 'scale(0.95)';
+			element.style.transform = "scale(0.95)";
 			setTimeout(() => {
-				element.style.transform = '';
+				element.style.transform = "";
 			}, 150);
 		}
 	}
@@ -252,13 +251,13 @@ export class PixelParityApp {
 	updateKeyboardShortcutDisplay() {
 		const isMac = navigator.userAgent.toUpperCase().indexOf("MAC") >= 0;
 		const modifier = isMac ? "⌘" : "Ctrl+";
-		
+
 		const shortcuts = [
-			{ element: document.querySelector('#copyJsonBtn kbd'), key: 'J' },
-			{ element: document.querySelector('#copyCssBtn kbd'), key: 'S' },
-			{ element: document.querySelector('#copyTableBtn kbd'), key: 'T' }
+			{ element: document.querySelector("#copyJsonBtn kbd"), key: "J" },
+			{ element: document.querySelector("#copyCssBtn kbd"), key: "S" },
+			{ element: document.querySelector("#copyTableBtn kbd"), key: "T" },
 		];
-		
+
 		shortcuts.forEach(({ element, key }) => {
 			if (element) {
 				element.textContent = `${modifier}${key}`;
@@ -267,37 +266,29 @@ export class PixelParityApp {
 	}
 
 	showCopyFeedback(message, isError = false) {
-		// Create or update feedback element
-		let feedback = document.getElementById('copyFeedback');
+		let feedback = document.getElementById("copyFeedback");
 		if (!feedback) {
-			feedback = document.createElement('div');
-			feedback.id = 'copyFeedback';
-			feedback.style.cssText = `
-				position: fixed;
-				top: 16px;
-				right: 16px;
-				padding: 8px 12px;
-				border-radius: 6px;
-				font-size: 14px;
-				font-weight: 500;
-				z-index: 1000;
-				transition: all 150ms ease;
-				pointer-events: none;
-			`;
+			feedback = document.createElement("div");
+			feedback.id = "copyFeedback";
+			feedback.className = "copy-feedback";
 			document.body.appendChild(feedback);
 		}
-		
+
+		if (this.feedbackTimer) {
+			clearTimeout(this.feedbackTimer);
+		}
+
 		feedback.textContent = message;
-		feedback.style.backgroundColor = isError ? 'var(--color-error)' : 'var(--color-success)';
-		feedback.style.color = 'white';
-		feedback.style.opacity = '1';
-		feedback.style.transform = 'translateY(0)';
-		
-		// Auto-hide after 2 seconds
+		feedback.classList.remove("success", "error", "show");
+
 		setTimeout(() => {
-			feedback.style.opacity = '0';
-			feedback.style.transform = 'translateY(-10px)';
-		}, 2000);
+			feedback.classList.add(isError ? "error" : "success");
+			feedback.classList.add("show");
+
+			this.feedbackTimer = setTimeout(() => {
+				feedback.classList.remove("show");
+			}, 2000);
+		}, 10);
 	}
 
 	sleep(ms) {

@@ -12,7 +12,6 @@ export class MetricsDetector {
 			);
 		}
 
-		// Execute in-page function to compute metrics on demand and return value directly.
 		try {
 			const [{ result }] = await chrome.scripting.executeScript({
 				target: { tabId: tab.id },
@@ -74,13 +73,11 @@ export class MetricsDetector {
 				throw new Error("Failed to extract metrics from page.");
 			}
 
-			// Cache last metrics for copy/export actions in the popup context only.
 			await chrome.storage.local.set({
 				[CONFIG.STORAGE_KEYS.LAST_METRICS]: result,
 			});
 			return result;
 		} catch {
-			// Handle restricted pages (chrome://, Web Store, etc.) without requiring tab URL.
 			throw new Error("Cannot access metrics on this page");
 		}
 	}
@@ -91,6 +88,4 @@ export class MetricsDetector {
 		]);
 		return result[CONFIG.STORAGE_KEYS.LAST_METRICS] || null;
 	}
-
-	// No longer needed: rely on executeScript error handling to detect restricted pages.
 }

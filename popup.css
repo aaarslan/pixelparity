@@ -609,3 +609,33 @@ body.compact-mode {
         display: none !important;
     }
 }
+
+/* Copy Feedback */
+.copy-feedback {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: white;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.copy-feedback.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.copy-feedback.success {
+    background-color: var(--color-success);
+}
+
+.copy-feedback.error {
+    background-color: var(--color-error);
+}
