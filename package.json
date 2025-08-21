@@ -1,0 +1,19 @@
+{
+	"name": "pixelparity",
+	"version": "1.0.1",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"clean": "rm -rf dist builds",
+		"build": "node scripts/build.mjs",
+		"pack": "node scripts/pack.mjs",
+		"build:pack": "npm run build && npm run pack"
+	},
+	"devDependencies": {
+		"archiver": "^7.0.1",
+		"esbuild": "^0.23.0",
+		"html-minifier-terser": "^7.2.0",
+		"imagemin": "^9.0.0",
+		"imagemin-pngquant": "^9.0.0"
+	}
+}

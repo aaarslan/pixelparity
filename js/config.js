@@ -1,6 +1,6 @@
 export const CONFIG = {
 	APP_NAME: "PixelParity",
-	VERSION: "1.0.0",
+	VERSION: "1.0.1",
 	STORAGE_KEYS: {
 		THEME: "pixelparity_theme",
 		COMPACT_MODE: "pixelparity_compact_mode",

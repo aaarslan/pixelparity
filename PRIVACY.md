@@ -1,7 +1,7 @@
 # Privacy Policy for PixelParity
 
 **Last Updated: August 19, 2025**\
-**Extension Version: 1.0.0**
+**Extension Version: 1.0.1**
 
 ## Introduction
 

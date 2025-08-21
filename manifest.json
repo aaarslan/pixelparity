@@ -2,11 +2,11 @@
 	"manifest_version": 3,
 	"name": "PixelParity - Precision Display Metrics",
 	"short_name": "PixelParity",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Display metrics tool for developers. Access viewport dimensions, screen resolution, zoom levels, and responsive breakpoints.",
 	"author": "aaarslan",
 	"homepage_url": "https://github.com/aaarslan/pixelparity",
-	"permissions": ["storage", "scripting", "tabs", "activeTab"],
+	"permissions": ["storage", "scripting", "activeTab"],
 	"action": {
 		"default_popup": "popup.html",
 		"default_icon": {
@@ -26,6 +26,9 @@
 		"128": "assets/icons/icon128.png",
 		"256": "assets/icons/icon256.png",
 		"512": "assets/icons/icon512.png"
+	},
+	"content_security_policy": {
+		"extension_pages": "script-src 'self'; object-src 'self'; connect-src 'none'; img-src 'self' data:; style-src 'self' 'unsafe-inline'"
 	},
 	"commands": {
 		"_execute_action": {

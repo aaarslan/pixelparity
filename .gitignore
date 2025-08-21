@@ -1,9 +1,54 @@
+### Build outputs
+dist/
+build/
+builds/
+
+### Dependencies
+node_modules/
+
+### Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+### Editor/IDE
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swp
+
+### OS
+.DS_Store
+Thumbs.db
+
+### Environment files
+.env
+.env.*
+!.env.example
+
+### Caches
+.eslintcache
+.cache/
+.parcel-cache/
+.turbo/
+coverage/
+.nyc_output/
+
+### Legacy/Sencha artifacts (preserved)
 .architect
 bootstrap.css
 bootstrap.js
 bootstrap.json
 bootstrap.jsonp
-build/
 classic.json
 classic.jsonp
 ext/

@@ -1,6 +1,6 @@
 /**
  * PixelParity - Professional Display Metrics Tool
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: Abdallah Arslan
  *
  * JavaScript Architecture:
