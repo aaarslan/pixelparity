@@ -66,7 +66,7 @@ When you click the extension icon, PixelParity:
 - Viewport dimensions (window.innerWidth, window.innerHeight)
 - Screen resolution (screen.width, screen.height)
 - Device pixel ratio (window.devicePixelRatio)
-- Browser zoom level (calculated from viewport vs. screen)
+- Browser zoom level (chrome.tabs.getZoom)
 - Document dimensions (document.body.scrollWidth/Height)
 - Root font size (computed CSS properties)
 
