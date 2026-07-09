@@ -1,5 +1,5 @@
 import { CONFIG } from "./config.js";
-import { prefersDarkMode } from "./utils.js";
+import { escapeHtml, prefersDarkMode } from "./utils.js";
 export class UIController {
 	constructor() {
 		this.elements = {};
@@ -136,7 +136,7 @@ export class UIController {
             <div class="metric-card" role="listitem">
                 <span class="metric-label">${label}</span>
                 <span class="metric-value">
-                    ${value}
+                    ${escapeHtml(value)}
                     ${unit ? `<span class="metric-unit">${unit}</span>` : ""}
                 </span>
             </div>`;
