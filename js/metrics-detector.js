@@ -12,8 +12,10 @@ export class MetricsDetector {
 			);
 		}
 
+		let injection;
+		let zoom;
 		try {
-			const [[{ result }], zoom] = await Promise.all([
+			[injection, zoom] = await Promise.all([
 				chrome.scripting.executeScript({
 					target: { tabId: tab.id },
 					func: () => {
@@ -68,19 +70,20 @@ export class MetricsDetector {
 				}),
 				chrome.tabs.getZoom(tab.id),
 			]);
-
-			if (!result) {
-				throw new Error("Failed to extract metrics from page.");
-			}
-			result.display.zoomLevel = Math.round(zoom * 100);
-
-			await chrome.storage.local.set({
-				[CONFIG.STORAGE_KEYS.LAST_METRICS]: result,
-			});
-			return result;
 		} catch {
 			throw new Error("Cannot access metrics on this page");
 		}
+
+		const result = injection[0]?.result;
+		if (!result) {
+			throw new Error("Failed to extract metrics from page.");
+		}
+		result.display.zoomLevel = Math.round(zoom * 100);
+
+		await chrome.storage.local.set({
+			[CONFIG.STORAGE_KEYS.LAST_METRICS]: result,
+		});
+		return result;
 	}
 
 	async getLastMetrics() {
