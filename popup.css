@@ -573,7 +573,7 @@ body.compact-mode {
 }
 
 /* Animations */
-#refreshBtn.active {
+#refreshBtn.active svg {
     animation: spin 1s linear;
 }
 
