@@ -91,7 +91,6 @@ export class PixelParityApp {
 				this.uiController.showLoading();
 			}
 			const metrics = await this.metricsDetector.detectMetrics();
-			chrome.storage.local.set({ [CONFIG.STORAGE_KEYS.LAST_METRICS]: metrics });
 			this.uiController.renderMetrics(metrics);
 		} catch (error) {
 			this.handleError(error);
