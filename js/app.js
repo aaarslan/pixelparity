@@ -86,8 +86,10 @@ export class PixelParityApp {
 	}
 	async detectAndRenderMetrics() {
 		try {
-			this.uiController.showLoading();
-			await this.sleep(300);
+			const successState = this.uiController.elements.successState;
+			if (!successState || successState.classList.contains("hidden")) {
+				this.uiController.showLoading();
+			}
 			const metrics = await this.metricsDetector.detectMetrics();
 			chrome.storage.local.set({ [CONFIG.STORAGE_KEYS.LAST_METRICS]: metrics });
 			this.uiController.renderMetrics(metrics);
@@ -100,18 +102,8 @@ export class PixelParityApp {
 		if (refreshBtn) {
 			refreshBtn.classList.add("active");
 		}
-
-		const mainContainer = document.querySelector(".app-main");
-		const scrollPosition = mainContainer ? mainContainer.scrollTop : 0;
-
 		try {
 			await this.detectAndRenderMetrics();
-
-			if (mainContainer) {
-				mainContainer.scrollTop = scrollPosition;
-			}
-		} catch (error) {
-			this.handleError(error);
 		} finally {
 			if (refreshBtn) {
 				setTimeout(() => {
@@ -289,9 +281,5 @@ export class PixelParityApp {
 				feedback.classList.remove("show");
 			}, 2000);
 		}, 10);
-	}
-
-	sleep(ms) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 }

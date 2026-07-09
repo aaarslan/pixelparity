@@ -53,9 +53,11 @@ export class UIController {
 		this.elements.retryBtn?.focus?.({ preventScroll: true });
 	}
 	showSuccess() {
+		const wasHidden = this.elements.successState.classList.contains("hidden");
 		this.hideAllStates();
 		this.elements.successState.classList.remove("hidden");
 		this.elements.successState.removeAttribute("aria-hidden");
+		if (!wasHidden) return;
 		if (this.elements.appMain) {
 			this.elements.appMain.scrollTop = 0;
 		}
