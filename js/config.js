@@ -1,13 +1,8 @@
 export const CONFIG = {
-	APP_NAME: "PixelParity",
-	VERSION: "1.0.1",
 	STORAGE_KEYS: {
 		THEME: "pixelparity_theme",
 		COMPACT_MODE: "pixelparity_compact_mode",
 		LAST_METRICS: "pixelparity_last_metrics",
-	},
-	TIMINGS: {
-		ANIMATION_DURATION: 250,
 	},
 	BREAKPOINTS: [
 		{ name: "XS", min: 0, max: 575 },

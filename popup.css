@@ -556,22 +556,6 @@ body.compact-mode {
     transform: translateX(20px);
 }
 
-.link-btn {
-    padding: var(--space-xs) var(--space-sm);
-    background: var(--color-bg-muted);
-    color: var(--color-primary);
-    text-decoration: none;
-    border-radius: var(--border-radius);
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    transition: all var(--transition);
-}
-
-.link-btn:hover {
-    background: var(--color-primary);
-    color: white;
-}
-
 /* Animations */
 #refreshBtn.active svg {
     animation: spin 1s linear;
@@ -594,20 +578,6 @@ body.compact-mode {
 
 .compact-mode .action-btn kbd {
     display: none;
-}
-
-/* Print Styles */
-@media print {
-    body {
-        width: auto;
-        min-height: auto;
-    }
-    
-    .settings-btn,
-    .settings-panel,
-    .actions-section {
-        display: none !important;
-    }
 }
 
 /* Copy Feedback */

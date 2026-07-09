@@ -195,12 +195,4 @@ export class UIController {
 		const isCompact = document.body.classList.toggle("compact-mode");
 		chrome.storage.sync.set({ [CONFIG.STORAGE_KEYS.COMPACT_MODE]: isCompact });
 	}
-	updateElement(elementKey, content) {
-		if (this.elements[elementKey]) {
-			this.elements[elementKey].textContent = content;
-		}
-	}
-	sleep(ms) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	}
 }
