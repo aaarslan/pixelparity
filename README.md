@@ -1,140 +1,160 @@
-# PixelParity — Precision Display Metrics
+# PixelParity — Viewport & Display Metrics
 
-![Version](https://img.shields.io/badge/version-1.0.1-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Manifest](https://img.shields.io/badge/Manifest-V3-informational)
+[![Version](https://img.shields.io/badge/version-2.0.0-2563eb)](CHANGELOG.md)
+[![Manifest](https://img.shields.io/badge/Manifest-V3-0f766e)](manifest.json)
+[![License](https://img.shields.io/badge/license-MIT-15803d)](LICENSE)
 
-![Logo](./assets/icons/PixelParity.png)
+PixelParity is a privacy-first Chrome extension for inspecting viewport, display,
+browser zoom, and responsive-layout metrics. It provides a compact one-click
+snapshot and a tab-scoped live side panel without permanent website access.
 
-Professional display metrics for developers and QA. Instantly see viewport size,
-screen resolution, zoom level, device pixel ratio, and responsive breakpoints in
-a clean, accessible UI.
+[Install PixelParity from the Chrome Web Store](https://chromewebstore.google.com/detail/pixelparity-precision-dis/nobkjipoljcbnldmicopkjkbinggcipa)
 
-## 🚀 Features
+## What v2 includes
 
-- Real-time metrics: viewport, screen, document, and computed aspect ratio
-- Zoom level and device pixel ratio detection
-- Responsive breakpoints with active highlight
-  - XS (0–575), SM (576–767), MD (768–991), LG (992–1199), XL (1200–1399), XXL
-    (≥1400)
-- Copy/export in three formats: JSON, CSS custom properties, and table
-- Light/Dark themes with system preference detection and persistence
-- Compact Mode option to reduce popup footprint
-- Keyboard shortcuts for fast copy actions (with correct Ctrl/⌘ hinting)
-- Privacy-first: no tracking, no external requests, minimal permissions
+- Compact popup with layout viewport, authoritative Chrome tab zoom, device pixel
+  ratio, and active breakpoint
+- Live side panel for resize, visual-viewport, orientation, document-size, and zoom
+  changes
+- Layout and visual viewport, outer window, scrollbar, screen and available screen
+  in CSS pixels, document extent, typography, display, and media-environment metrics
+- In-memory baseline comparison with live numeric deltas
+- PixelParity Classic and Tailwind-style presets plus up to 10 synced custom
+  profiles with 12 breakpoints each
+- Versioned JSON, CSS custom property, Markdown table, and TSV exports
+- Light, dark, and system themes; comfortable and compact densities
+- Keyboard-accessible controls, visible focus, live status announcements,
+  forced-colors support, and reduced-motion behavior
+- No accounts, telemetry, analytics, external requests, remote code, page metadata,
+  or persisted measurements
 
-## 📦 Installation
+Element rulers, page overlays, screenshots, device emulation, and automatic window
+resizing are intentionally outside the extension’s single purpose.
 
-### Chrome Web Store
+## Install for development
 
-- Listing link coming soon
+PixelParity 2.0 requires Chrome 116 or newer and Node.js 22.12 or newer for local
+development.
 
-### Load Unpacked (Development)
-
-1. Clone the repo
-2. Go to chrome://extensions and enable Developer mode
-3. Click “Load unpacked” and select the project root folder
-
-## 🎯 Usage
-
-1. Open any website
-2. Open PixelParity from the toolbar (or Alt+Shift+V)
-3. View metrics, breakpoints, and actions
-4. Copy as JSON/CSS/Table or tweak Settings (theme, compact mode)
-
-### Keyboard Shortcuts
-
-- Open extension: Alt+Shift+V
-- Copy as JSON: Ctrl/⌘ + J
-- Copy as CSS variables: Ctrl/⌘ + S
-- Copy as Table: Ctrl/⌘ + T
-- Refresh metrics: Ctrl/⌘ + R
-- Toggle theme: Ctrl/⌘ + D
-
-Note: The popup displays the proper modifier for your OS automatically.
-
-## � How it works (Architecture)
-
-- `js/metrics-detector.js` — Injects a small function into the active page using
-  the MV3 Scripting API to read safe, in-page properties (viewport, screen,
-  typography, DPR, zoom) and returns a plain object.
-- `js/ui-controller.js` — Renders loading/error/success states, metrics grid,
-  breakpoints, theme + compact toggles, and handles copy feedback.
-- `js/app.js` — Orchestrates initialization, keyboard shortcuts, export actions,
-  and error handling.
-- `js/config.js` — Constants (breakpoints, export templates, storage keys).
-- `js/utils.js` — Small helpers (debounce/throttle, timestamp, dark-mode query).
-- `popup.html / popup.css / popup.js` — The popup UI shell and bootstrap.
-
-## �️ Permissions
-
-From `manifest.json` (MV3):
-
-- `activeTab` — Access the current tab only when you interact with the
-  extension.
-- `scripting` — Inject the metrics function into the active tab to read display
-  properties.
-- `storage` — Persist lightweight settings (theme, compact mode) locally.
-
-No remote code, no analytics, no network calls.
-
-## ⚠️ Limitations
-
-- Restricted pages: Browsers block extensions on internal pages like
-  `chrome://*`, `edge://*`, `about:*`, and the Chrome Web Store
-- Strict CSP sites may block script execution; you’ll see an error in the popup
-- Orientation may be reported as `unknown` if not exposed by the page
-
-## 📁 Project Structure
-
-```text
-pixelparity/
-├── assets/
-│   └── icons/
-├── js/
-│   ├── app.js
-│   ├── metrics-detector.js
-│   ├── config.js
-│   ├── ui-controller.js
-│   └── utils.js
-├── manifest.json
-├── popup.html
-├── popup.css
-├── popup.js
-├── LICENSE
-├── PRIVACY.md
-└── README.md
+```bash
+npm ci
+npm run build
 ```
 
-## 🔒 Privacy
+Then open `chrome://extensions`, enable Developer mode, choose **Load unpacked**,
+and select the generated `dist` directory. Do not load the repository root.
 
-- No tracking, telemetry, or external requests
-- Only stores theme, compact mode, and last detected metrics locally via
-  `chrome.storage`
-- Metrics are computed on the active page at the moment you open the popup
+## Use PixelParity
 
-See [PRIVACY.md](PRIVACY.md) for details.
+1. Open a normal website.
+2. Select PixelParity in the toolbar or use the assigned extension shortcut.
+3. Read the essential snapshot in the popup.
+4. Select **Open live inspector** for live updates, breakpoints, baselines, and
+   exports.
 
-## 🐛 Troubleshooting
+The popup reads the shortcut Chrome actually assigned through `commands.getAll()`.
+If Chrome leaves the shortcut unassigned because of a conflict, PixelParity says so
+instead of displaying a hard-coded key combination.
 
-- “No active tab found” — Make sure a normal webpage tab is selected
-- “Cannot access metrics on protected browser pages” — Try a regular site
-  instead
-- “Failed to extract metrics from page” — The page’s CSP may be blocking
-  injection
+## Permissions
 
-## 📄 License
+The manifest declares exactly four permissions:
 
-MIT — see [LICENSE](LICENSE)
+- `activeTab` — grants temporary access to the current tab only after explicit
+  invocation
+- `scripting` — injects the bundled, isolated measurement bridge into that tab
+- `storage` — saves preferences only in `chrome.storage.sync`
+- `sidePanel` — opens the live inspector for the invoked tab
 
-## � Author
+There are no host, `tabs`, clipboard, downloads, debugger, externally connectable,
+or web-accessible-resource permissions. The JSON download uses a user-created Blob,
+and clipboard writes occur only from extension UI actions.
 
-Abdallah Arslan — [@aaarslan](https://github.com/aaarslan)
+See [PRIVACY.md](PRIVACY.md) for the complete data-handling disclosure.
 
-## 🤝 Contributing
+## Architecture
 
-PRs welcome! Please fork, create a feature branch, and open a Pull Request.
+```text
+src/
+├── bridge/          # Isolated, dynamically injected page-measurement bridge
+├── components/      # Shared Preact presentation components
+├── popup/           # One-shot popup controller and UI
+├── shared/          # Contracts, breakpoints, storage, serializers, errors
+├── sidepanel/       # Live connection, baselines, profiles, and exports
+├── popup.html
+├── sidepanel.html
+└── styles.css
+```
 
-—
+The popup injects `bridge.js` after the toolbar invocation, requests one whitelisted
+measurement object, and merges it with `chrome.tabs.getZoom()`. The side panel opens
+from the popup’s button, connects to the same temporary bridge, and starts observation
+only while visible. Resize and media events are throttled to at most 10 updates per
+second. Closing or hiding the panel stops observers; navigation destroys the bridge
+and clears any in-memory baseline.
 
-Made for front-end developers who care about pixel-perfect UI.
+No background service worker is required. The strict extension CSP allows only
+bundled scripts and styles and blocks all network connections.
+
+## Data model and storage
+
+`MetricsSnapshotV2` stores numeric measurement values and derived breakpoint context.
+It has no URL, title, page-content, or history field. Measurements and baselines remain
+in extension-page memory only.
+
+`PreferencesV2` contains theme, density, active breakpoint profile, custom profiles,
+and default export format. It is the only kind of data saved in
+`chrome.storage.sync`, so Chrome may sync it between signed-in browsers when Chrome
+Sync is enabled. PixelParity stores a small preference index and one bounded record
+per custom profile so the full 10-profile limit stays below
+[Chrome Sync’s 8 KiB per-item quota](https://developer.chrome.com/docs/extensions/reference/api/storage#storage-areas).
+
+The idempotent v1 migration maps theme and compact mode, defaults existing users to
+PixelParity Classic, and deletes the old `pixelparity_last_metrics` cache without
+reading its stored value.
+
+## Validation and packaging
+
+```bash
+npm run format:check     # Biome formatting
+npm run lint             # Biome lint and unsafe-HTML gate
+npm run typecheck        # Strict TypeScript
+npm test                 # Unit, component, keyboard, live-region, and axe tests
+npm run build            # Explicit production runtime allowlist
+npm run test:e2e         # Real packaged-extension Chrome flow
+npm run build:pack       # Reproducible, version-matched ZIP
+npm run audit:ci         # Fails on high or critical dependency findings
+```
+
+The final ZIP contains 12 allowlisted runtime files, has fixed entry timestamps and
+ordering, excludes source maps and store artwork, and fails above 150 KiB. Store
+screenshots and promos are generated from the shipping Preact components with
+`npm run assets:store`; the captioned demo is generated with
+`npm run assets:demo`.
+
+CI runs formatting, linting, type checking, unit/component/accessibility tests,
+package verification, dependency auditing, reproducibility checks, and packaged
+extension E2E on Linux, macOS, and Windows.
+
+## Limitations
+
+- Chrome blocks injection on `chrome://` pages, the Chrome Web Store, and other
+  protected browser surfaces.
+- A cross-origin navigation revokes the temporary `activeTab` grant. The side panel
+  shows a reconnect state; it never asks for permanent host access.
+- Screen values are browser-exposed CSS pixels, not claims about a monitor’s physical
+  hardware resolution.
+- Browser zoom and device pixel ratio are separate inputs and may both affect the
+  rendered-pixel estimate.
+
+## Project material
+
+- [Changelog](CHANGELOG.md)
+- [Privacy policy](PRIVACY.md)
+- [Security policy](SECURITY.md)
+- [Store listing copy](store/listing.md)
+- [Reviewer instructions](store/reviewer-instructions.md)
+- [Release checklist](store/release-checklist.md)
+
+PixelParity is available under the [MIT License](LICENSE). Issues and feature requests
+belong in the [GitHub issue tracker](https://github.com/aaarslan/pixelparity/issues).

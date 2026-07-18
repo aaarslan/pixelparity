@@ -1,19 +1,48 @@
 {
-	"name": "pixelparity",
-	"version": "1.0.1",
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"clean": "rm -rf dist builds",
-		"build": "node scripts/build.mjs",
-		"pack": "node scripts/pack.mjs",
-		"build:pack": "npm run build && npm run pack"
-	},
-	"devDependencies": {
-		"archiver": "^7.0.1",
-		"esbuild": "^0.23.0",
-		"html-minifier-terser": "^7.2.0",
-		"imagemin": "^9.0.0",
-		"imagemin-pngquant": "^9.0.0"
-	}
+  "name": "pixelparity",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "build": "node scripts/build.mjs",
+    "verify:package": "node scripts/verify-package.mjs",
+    "pack": "node scripts/pack.mjs",
+    "build:pack": "npm run build && npm run pack",
+    "assets:brand": "node scripts/generate-brand-assets.mjs",
+    "assets:store": "node scripts/capture-store-assets.mjs",
+    "assets:demo": "node scripts/build-demo-video.mjs",
+    "audit:ci": "npm audit --audit-level=high",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build:pack && npm run audit:ci"
+  },
+  "dependencies": {
+    "preact": "10.29.7"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.4",
+    "@testing-library/preact": "3.2.4",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/user-event": "14.6.1",
+    "@types/archiver": "7.0.0",
+    "@types/chrome": "0.2.2",
+    "@types/node": "25.3.3",
+    "archiver": "8.0.0",
+    "axe-core": "4.10.3",
+    "esbuild": "0.28.1",
+    "jsdom": "29.1.1",
+    "puppeteer": "25.3.0",
+    "sharp": "0.35.3",
+    "typescript": "7.0.2",
+    "vitest": "4.1.10"
+  }
 }

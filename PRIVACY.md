@@ -1,263 +1,92 @@
-# Privacy Policy for PixelParity
+# PixelParity Privacy Policy
 
-**Last Updated: August 19, 2025**\
-**Extension Version: 1.0.1**
+Last updated: July 18, 2026
 
-## Introduction
+Applies to: PixelParity 2.0.0 and later
 
-PixelParity is a developer-focused Chrome extension that provides instant access
-to display metrics for web development and quality assurance. This privacy
-policy explains how we handle (or more accurately, how we **don't** handle) your
-data when you use our extension.
+PixelParity is a local, account-free Chrome extension for inspecting viewport,
+display, zoom, and responsive-layout measurements. It has no analytics, telemetry,
+advertising, tracking, external APIs, or developer-operated servers.
 
-**TL;DR**: PixelParity collects zero personal data, makes zero external
-requests, and operates entirely within your browser for maximum privacy.
+## What PixelParity processes
 
-## Our Privacy Philosophy
+After you explicitly invoke PixelParity on a tab, the extension temporarily reads
+browser-exposed display properties from that tab:
 
-PixelParity was built from the ground up with **privacy by design**. We believe
-that developer tools should enhance your workflow without compromising your
-privacy. Every design decision prioritizes your data protection and user
-autonomy.
+- Layout and visual viewport dimensions, offset, and visual scale
+- Outer-window and scrollbar dimensions
+- Screen and available-screen dimensions in CSS pixels
+- Device pixel ratio, color depth, orientation, and document extent
+- Root and body font sizes
+- Color scheme, reduced-motion, forced-colors, pointer, hover, and color-gamut media
+  capabilities
+- The current tab’s browser zoom through Chrome’s Tabs API
 
-## What We DON'T Collect
+This processing occurs on your device only so the popup and side panel can show the
+requested measurements. PixelParity does not read or include the page URL, page title,
+page content, form values, browsing history, cookies, or account identity in a
+measurement snapshot.
 
-We are committed to transparency about what we **do not** do:
+## What PixelParity stores
 
-### ❌ **Zero Personal Data Collection**
+Live measurements and comparison baselines are held only in the memory of the open
+popup or side panel. They are not written to Chrome storage and disappear when that
+extension view closes. A baseline also clears when the inspected page navigates.
 
-- No names, email addresses, or contact information
-- No user accounts, profiles, or identification systems
-- No demographic information or user characteristics
-- No device fingerprinting or unique identifiers
+PixelParity stores only these preferences in `chrome.storage.sync`:
 
-### ❌ **Zero Browsing Activity Tracking**
+- Theme: system, light, or dark
+- Display density: comfortable or compact
+- Active breakpoint profile
+- Up to 10 custom breakpoint profiles
+- Default export format
 
-- No browsing history or website visit logs
-- No URL tracking or page content analysis
-- No cross-site tracking or behavioral profiling
-- No time spent on websites or usage patterns
+Chrome may sync these preferences between browsers signed into the same Google
+account when Chrome Sync is enabled. That synchronization is operated by Google under
+the user’s Chrome settings; the PixelParity developer does not receive the synced
+values or a user identity. Storage access is restricted to trusted extension pages,
+not the injected measurement bridge.
 
-### ❌ **Zero External Data Transmission**
+When upgrading from v1, PixelParity deletes the obsolete local metrics cache,
+including any URL previously stored there, and removes the old preference keys. The
+migration does not transmit that value.
 
-- No data sent to our servers (we don't have any)
-- No third-party analytics (Google Analytics, etc.)
-- No crash reporting or telemetry services
-- No external API calls or network requests
+## Data collection and transmission
 
-### ❌ **Zero Third-Party Integration**
+PixelParity does not collect, sell, share, or transmit user data. The extension makes
+no network requests. All JavaScript, CSS, HTML, and image files execute from the
+installed package under a Content Security Policy that blocks network connections and
+remote code.
 
-- No advertising networks or tracking pixels
-- No social media plugins or sharing tools
-- No external content delivery networks (CDNs)
-- No integration with cloud services
+Exports are created only when you select a copy or download control. JSON, CSS,
+Markdown, and TSV output contain measurements and breakpoint context only. They never
+include a URL, title, page content, or browsing history. Clipboard and downloaded Blob
+contents remain under your control.
 
-## What the Extension Actually Does
+## Permission purposes
 
-PixelParity performs a single, focused function with complete transparency:
+- `activeTab` provides temporary access to the tab on which you invoke the extension.
+  Chrome revokes that access on a cross-origin navigation or when the tab closes.
+- `scripting` injects the packaged, isolated measurement bridge after that explicit
+  invocation.
+- `storage` saves only the preferences listed above.
+- `sidePanel` opens the tab-scoped live inspector when you select its popup button.
 
-### **Display Metrics Collection (Local Only)**
+PixelParity requests no permanent website access and no host, browsing-history,
+identity, clipboard, downloads, debugger, or externally connectable permission.
 
-When you click the extension icon, PixelParity:
+## Retention and control
 
-1. **Executes a measurement script** in your current browser tab
-2. **Reads standard browser properties** including:
+You can change saved preferences in the popup and remove all extension data by
+uninstalling PixelParity. Chrome Sync controls, including whether extension settings
+sync between browsers, are available in Chrome’s own sync settings. PixelParity has no
+server-side record to access or delete.
 
-- Viewport dimensions (window.innerWidth, window.innerHeight)
-- Screen resolution (screen.width, screen.height)
-- Device pixel ratio (window.devicePixelRatio)
-- Browser zoom level (chrome.tabs.getZoom)
-- Document dimensions (document.body.scrollWidth/Height)
-- Root font size (computed CSS properties)
+## Changes and contact
 
-3. **Displays results immediately** in the extension popup
-4. **Discards all data** when you close the popup
+Material changes to this policy will be versioned with the source and reflected in an
+extension update before new handling begins.
 
-**Important**: This measurement script only reads safe, read-only browser
-properties. It cannot access page content, forms, user input, or sensitive
-information.
-
-### **Local Settings Storage**
-
-PixelParity stores only two user preferences on your device:
-
-- **Theme selection** (light mode vs. dark mode)
-- **Display mode** (normal vs. compact layout)
-
-These settings are stored using Chrome's built-in storage APIs and remain on
-your device.
-
-## Required Permissions Explained
-
-Chrome extensions must declare all permissions upfront. PixelParity requests the
-absolute minimum necessary:
-
-### **`activeTab`** - Access Current Tab Only
-
-- **Purpose**: Allows script injection into the currently active tab
-- **Limitation**: Only works when you click the extension icon
-- **No Access To**: Browsing history, other tabs, or background activity
-
-### **`scripting`** - Inject Measurement Code
-
-- **Purpose**: Injects a small script to read display properties
-- **Limitation**: Script only reads browser dimensions, nothing else
-- **No Access To**: Page content, user data, or persistent storage
-
-### **`storage`** - Save User Preferences
-
-- **Purpose**: Remembers your theme and layout preferences
-- **Limitation**: Only stores settings, no user data
-- **Storage Type**: Chrome's secure local storage (chrome.storage.sync/local)
-
-## Data Storage and Retention
-
-### **User Preferences (Persistent)**
-
-- **What**: Theme selection, compact mode preference
-- **Where**: Chrome's local storage on your device
-- **Duration**: Until you uninstall the extension or clear browser data
-- **Access**: Only PixelParity, not shared with other extensions or websites
-
-### **Metrics Cache (Temporary)**
-
-- **What**: Display measurements for export functionality
-- **Where**: Browser memory only
-- **Duration**: Cleared when popup closes or extension restarts
-- **Access**: Never leaves your browser
-
-### **No Server Storage**
-
-PixelParity operates entirely offline. We maintain no servers, databases, or
-cloud storage systems.
-
-## Your Privacy Rights
-
-### **Data Access**
-
-Since we collect no personal data, there is no profile or account to access.
-
-### **Data Deletion**
-
-- **Settings**: Clear through Chrome settings → Privacy → Site Data
-- **Complete Removal**: Uninstall extension to remove all traces
-
-### **Data Portability**
-
-Your settings are stored in standard Chrome storage and can be backed up through
-Chrome's sync system.
-
-### **Opt-Out**
-
-Simply don't use the extension or uninstall it at any time.
-
-## Open Source Transparency
-
-PixelParity is fully open source under the MIT License:
-
-- **Source Code**:
-  [https://github.com/aaarslan/pixelparity](https://github.com/aaarslan/pixelparity)
-- **Issue Tracking**:
-  [https://github.com/aaarslan/pixelparity/issues](https://github.com/aaarslan/pixelparity/issues)
-- **Independent Verification**: Anyone can audit our code to verify these
-  privacy claims
-
-We encourage security researchers and privacy advocates to review our code.
-
-## Compliance and Legal
-
-### **Regulatory Compliance**
-
-This extension is designed to comply with:
-
-- **GDPR (General Data Protection Regulation)**: No personal data processing
-- **CCPA (California Consumer Privacy Act)**: No personal information sale or
-  sharing
-- **COPPA (Children's Online Privacy Protection Act)**: Safe for all ages
-- **Chrome Web Store Developer Program Policies**: Manifest V3 compliance
-
-### **Age Restrictions**
-
-PixelParity is suitable for users of all ages as it collects no personal
-information.
-
-### **International Users**
-
-Since no data leaves your device, international data transfer regulations do not
-apply.
-
-## Security Measures
-
-### **Code Security**
-
-- No eval() or dangerous JavaScript patterns
-- No external script loading or remote code execution
-- Content Security Policy compliance
-- Regular security updates
-
-### **Permission Security**
-
-- Minimal permission model
-- No overprivileged access requests
-- Runtime permission validation
-
-## Changes to This Policy
-
-### **Notification of Changes**
-
-- Major changes will be noted in extension updates
-- Policy version will be incremented
-- GitHub repository will track all changes
-
-### **No Retroactive Changes**
-
-We will not retroactively change our data handling practices for existing users.
-
-## Contact and Support
-
-### **Privacy Questions**
-
-For privacy-related concerns or questions:
-
-- **GitHub Issues**:
-  [https://github.com/aaarslan/pixelparity/issues](https://github.com/aaarslan/pixelparity/issues)
-- **Email**: [Provide your contact email here]
-- **Response Time**: We aim to respond within 48 hours
-
-### **Security Issues**
-
-For security vulnerabilities:
-
-- **Private Disclosure**: Contact via GitHub or email
-- **Responsible Disclosure**: We appreciate advance notice before public
-  disclosure
-
-## Technical Implementation Notes
-
-### **Manifest V3 Compliance**
-
-PixelParity uses Chrome's latest extension platform (Manifest V3) which
-provides:
-
-- Enhanced security sandboxing
-- Improved permission controls
-- Service worker architecture for better performance
-
-### **No Remote Code**
-
-All JavaScript, CSS, and HTML files are included in the extension package. No
-code is loaded from external sources.
-
-### **Content Security Policy**
-
-Strict CSP prevents unauthorized script execution and external resource loading.
-
-## Conclusion
-
-PixelParity demonstrates that powerful developer tools can be built without
-sacrificing user privacy. By processing everything locally and collecting zero
-personal data, we provide the functionality developers need while respecting
-their privacy completely.
-
-**Questions?** We're committed to transparency. If anything in this policy is
-unclear, please don't hesitate to reach out.
+For privacy questions, contact **arslan.abdallah@gmail.com** or open an issue at
+[github.com/aaarslan/pixelparity/issues](https://github.com/aaarslan/pixelparity/issues).
+Security reports should follow [SECURITY.md](SECURITY.md).

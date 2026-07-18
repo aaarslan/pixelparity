@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <title>PixelParity pixel P mark</title>
+  <rect x="16" y="16" width="96" height="96" rx="22" fill="#2563eb"/>
+  <path fill="#dbeafe" d="M38 36h36v14H52v14h22v14H52v24H38z"/>
+  <path fill="#fff" d="M52 36h24c12 0 22 9 22 21s-10 21-22 21h-2V64h2c4 0 8-3 8-7s-4-7-8-7H52z"/>
+  <rect x="84" y="36" width="14" height="14" fill="#67e8f9"/>
+</svg>
