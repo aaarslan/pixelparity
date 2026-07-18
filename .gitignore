@@ -2,6 +2,7 @@
 dist/
 build/
 builds/
+.store-preview/
 
 ### Dependencies
 node_modules/

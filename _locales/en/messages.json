@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "PixelParity — Viewport & Display Metrics"
+  },
+  "extensionShortName": {
+    "message": "PixelParity"
+  },
+  "extensionDescription": {
+    "message": "Inspect live viewport, screen, browser zoom, pixel ratio, visual viewport, and responsive breakpoints—locally and on demand."
+  },
+  "actionTitle": {
+    "message": "Inspect this tab with PixelParity"
+  },
+  "commandOpenDescription": {
+    "message": "Open PixelParity"
+  }
+}

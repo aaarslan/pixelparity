@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Format, lint, and type check
+        run: |
+          npm run format:check
+          npm run lint
+          npm run typecheck
+
+      - name: Run unit, component, and accessibility tests
+        run: npm test
+
+      - name: Build and package extension
+        run: npm run build:pack
+
+      - name: Verify reproducible archive
+        run: |
+          cp builds/pixelparity-2.0.0.zip /tmp/pixelparity-first.zip
+          npm run pack
+          cmp /tmp/pixelparity-first.zip builds/pixelparity-2.0.0.zip
+
+      - name: Enforce dependency audit gate
+        run: npm run audit:ci
+
+      - name: Upload verified extension package
+        uses: actions/upload-artifact@v4
+        with:
+          name: pixelparity-2.0.0
+          path: builds/pixelparity-2.0.0.zip
+          if-no-files-found: error
+
+  extension-e2e:
+    name: Extension E2E (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Build final extension
+        run: npm run build
+
+      - name: Install Chrome for Testing
+        run: npx puppeteer browsers install chrome
+
+      - name: Run packaged extension E2E headlessly
+        run: npm run test:e2e
+        env:
+          PIXELPARITY_HEADLESS: "1"
