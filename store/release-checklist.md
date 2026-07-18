@@ -29,6 +29,9 @@ but the manual Stable checks above remain release sign-off gates.
 
 - [ ] Update the existing item ID `nobkjipoljcbnldmicopkjkbinggcipa`; do not create a
   duplicate listing.
+- [ ] Confirm the item ID in the dashboard URL before every package upload. The
+  accidental draft `edbkmagbdambnolcbnomeogdgbfbdope` is not the public PixelParity
+  listing and must not be submitted as the v2 upgrade.
 - [ ] Paste title, summary, description, and category from `listing.md`.
 - [ ] Upload the four square icons, five current 1280×800 screenshots, 440×280 tile,
   1400×560 marquee, and captioned demo.
