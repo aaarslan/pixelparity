@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PixelParity responsive mismatch fixture</title>
+    <style>
+      :root { font: 16px/1.5 system-ui, sans-serif; color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body { margin: 0; min-height: 1600px; background: #eaf1ff; color: #10203a; }
+      main { width: min(960px, calc(100% - 48px)); margin: 48px auto; }
+      .fixture-nav { display: flex; gap: 24px; padding: 16px 24px; border-radius: 12px; background: #2563eb; color: white; }
+      .fixture-nav a { color: inherit; text-decoration: none; white-space: nowrap; }
+      .fixture-card { margin-top: 24px; padding: 32px; border: 4px solid #2563eb; border-radius: 12px; background: white; }
+      @media (max-width: 760px) {
+        /* Deliberate regression: this fixed width makes the nav overflow. */
+        .fixture-nav { width: 780px; }
+      }
+    </style>
+  </head>
+  <body data-fixture="responsive-nav-overflow-below-760">
+    <main>
+      <h1>Responsive navigation overflow fixture</h1>
+      <p>At widths below 760 CSS pixels, the navigation intentionally overflows so a baseline, resize, zoom change, and report can be reproduced locally.</p>
+      <nav class="fixture-nav" aria-label="Fixture navigation">
+        <a href="#overview">Overview</a><a href="#activity">Activity</a><a href="#settings">Settings</a><a href="#billing">Billing and permissions</a>
+      </nav>
+      <section class="fixture-card"><h2 id="overview">Expected behavior</h2><p>The navigation should fit the viewport. This fixture intentionally violates that expectation at its narrow breakpoint.</p></section>
+    </main>
+  </body>
+</html>

@@ -80,6 +80,36 @@ describe("extension UI", () => {
     expect(screen.getByRole("heading", { name: "Breakpoint profile" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Export" }));
     expect(screen.getByRole("heading", { name: "Copy or download" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Copy issue-ready report" })).toBeEnabled();
+  });
+
+  it("copies a baseline-to-reproduction report from Export", async () => {
+    const user = userEvent.setup();
+    const onStatus = vi.fn();
+    const writeText = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValueOnce();
+    render(
+      <SidePanelView
+        preferences={DEMO_PREFERENCES}
+        snapshot={DEMO_SNAPSHOT}
+        baseline={DEMO_BASELINE}
+        inspectorState="live"
+        errorCode="UNKNOWN"
+        status=""
+        defaultSection="export"
+        onReconnect={() => undefined}
+        onSetBaseline={() => undefined}
+        onClearBaseline={() => undefined}
+        onPreferencesChange={() => undefined}
+        onStatus={onStatus}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Copy issue-ready report" }));
+    expect(writeText).toHaveBeenCalledWith(
+      expect.stringContaining("Responsive mismatch reproduction"),
+    );
+    expect(onStatus).toHaveBeenCalledWith(
+      "Issue-ready report copied. Add product context before sharing.",
+    );
   });
 
   it("offers a reconnect action after temporary tab access ends", async () => {
