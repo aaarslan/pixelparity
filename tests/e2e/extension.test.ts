@@ -65,10 +65,7 @@ beforeAll(async () => {
   fixtureUrl = `http://127.0.0.1:${address.port}/responsive-bug.html`;
 
   const executablePath =
-    process.env.PUPPETEER_EXECUTABLE_PATH ??
-    (process.platform === "darwin"
-      ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-      : await puppeteer.executablePath());
+    process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath());
   browser = await puppeteer.launch({
     executablePath,
     headless: process.env.PIXELPARITY_HEADLESS === "1",

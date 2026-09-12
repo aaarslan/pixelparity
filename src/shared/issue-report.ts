@@ -8,6 +8,23 @@ interface ComparisonRow {
   difference: string;
 }
 
+function escapeMarkdownInline(value: string): string {
+  const withoutControlCharacters = Array.from(value, (character) => {
+    const codePoint = character.codePointAt(0) ?? 0;
+    const isControlCharacter =
+      codePoint <= 0x1f ||
+      (codePoint >= 0x7f && codePoint <= 0x9f) ||
+      codePoint === 0x2028 ||
+      codePoint === 0x2029;
+    return isControlCharacter ? " " : character;
+  }).join("");
+
+  return withoutControlCharacters
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/([\\`*_[\]{}()#+\-.!|<>])/g, "\\$1");
+}
+
 function layoutDifference(baseline: MetricsSnapshotV2, current: MetricsSnapshotV2): string {
   const width = current.viewport.layout.width - baseline.viewport.layout.width;
   const height = current.viewport.layout.height - baseline.viewport.layout.height;
@@ -55,8 +72,8 @@ function comparisonRows(
     },
     {
       metric: "Responsive range",
-      baseline: `${baseline.breakpoint.label} (${formatNumber(baseline.breakpoint.minWidth)} px+)`,
-      reproduced: `${current.breakpoint.label} (${formatNumber(current.breakpoint.minWidth)} px+)`,
+      baseline: `${escapeMarkdownInline(baseline.breakpoint.label)} (${formatNumber(baseline.breakpoint.minWidth)} px+)`,
+      reproduced: `${escapeMarkdownInline(current.breakpoint.label)} (${formatNumber(current.breakpoint.minWidth)} px+)`,
       difference:
         baseline.breakpoint.pointId === current.breakpoint.pointId
           ? "Unchanged"
@@ -83,16 +100,22 @@ export function serializeIssueReport(
 
   return `## Responsive mismatch reproduction
 
+### Expected behavior
+[Author: describe what should happen.]
+
+### Actual behavior
+[Author: describe what happened instead.]
+
 ### Steps
 1. Inspect the affected view with PixelParity.
 2. Capture a baseline in the working state.
 3. Reproduce the mismatch by resizing the viewport and/or changing Chrome tab zoom.
-4. Paste this report with the product, page, and expected behavior context added manually.
+4. Add the affected product, page, or build context and complete the behavior sections above.
 
 ### Captures
 - Baseline: ${formatTimestamp(baseline.capturedAt)}
 - Reproduced: ${formatTimestamp(current.capturedAt)}
-- Breakpoint profile: ${current.breakpoint.profileName}
+- Breakpoint profile: ${escapeMarkdownInline(current.breakpoint.profileName)}
 
 | Metric | Baseline | Reproduced | Difference |
 | --- | ---: | ---: | --- |

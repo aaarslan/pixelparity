@@ -39,6 +39,12 @@ describe("snapshot exports", () => {
   it("creates a useful baseline-to-reproduction report without page metadata", () => {
     const report = serializeIssueReport(DEMO_BASELINE, DEMO_SNAPSHOT);
     expect(report).toContain("## Responsive mismatch reproduction");
+    expect(report).toContain(
+      "### Expected behavior\n[Author: describe what should happen.]",
+    );
+    expect(report).toContain(
+      "### Actual behavior\n[Author: describe what happened instead.]",
+    );
     expect(report).toContain("Capture a baseline in the working state.");
     expect(report).toContain(
       "| Layout viewport | 1024 × 720 px | 1280 × 720 px | +256 px wide; 0 px tall |",
@@ -47,5 +53,41 @@ describe("snapshot exports", () => {
     expect(report).toContain("Add the affected page or build context manually");
     expect(report.toLocaleLowerCase("en-US")).not.toContain("https://");
     expect(report).not.toContain("example.com");
+  });
+
+  it("keeps adversarial custom breakpoint text inside its Markdown fields", () => {
+    const baseline = {
+      ...DEMO_BASELINE,
+      breakpoint: {
+        ...DEMO_BASELINE.breakpoint,
+        label: "Working | **wide**\n| forged | row |\u0000",
+      },
+    };
+    const reproduced = {
+      ...DEMO_SNAPSHOT,
+      breakpoint: {
+        ...DEMO_SNAPSHOT.breakpoint,
+        label: "Phone [docs](https://example.invalid)\r\n<script>",
+        profileName: "Design **System**\n# private | profile",
+      },
+    };
+
+    const report = serializeIssueReport(baseline, reproduced);
+    const tableLines = report.split("\n").filter((line) => line.startsWith("|"));
+
+    expect(tableLines).toHaveLength(7);
+    expect(tableLines.every((line) => (line.match(/(?<!\\)\|/g) ?? []).length === 5)).toBe(
+      true,
+    );
+    expect(report).toContain("Working \\| \\*\\*wide\\*\\* \\| forged \\| row");
+    expect(report).toContain(
+      "Phone \\[docs\\]\\(https://example\\.invalid\\) \\<script\\>",
+    );
+    expect(report).toContain(
+      "Breakpoint profile: Design \\*\\*System\\*\\* \\# private \\| profile",
+    );
+    expect(report).not.toContain("\n| forged | row |");
+    expect(report).not.toContain("\n# private | profile");
+    expect(report).not.toContain("<script>");
   });
 });
