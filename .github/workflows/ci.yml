@@ -82,6 +82,21 @@ jobs:
       - name: Install Chrome for Testing
         run: npx puppeteer browsers install chrome
 
+      - name: Allow Chrome for Testing to use its sandbox
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          chrome_path="$(node --input-type=module -e "import puppeteer from 'puppeteer'; console.log(await puppeteer.executablePath())")"
+          sudo tee /etc/apparmor.d/pixelparity-chrome-for-testing > /dev/null <<EOF
+          abi <abi/4.0>,
+          include <tunables/global>
+
+          profile pixelparity-chrome-for-testing "$chrome_path" flags=(unconfined) {
+            userns,
+          }
+          EOF
+          sudo apparmor_parser /etc/apparmor.d/pixelparity-chrome-for-testing
+
       - name: Run packaged extension E2E headlessly
         run: npm run test:e2e
         env:
