@@ -72,13 +72,16 @@ beforeAll(async () => {
   browser = await puppeteer.launch({
     executablePath,
     headless: process.env.PIXELPARITY_HEADLESS === "1",
-    enableExtensions: [path.join(root, "dist")],
+    // Chrome 137+ no longer supports loading unpacked extensions through
+    // command-line flags. Enable Puppeteer's extension protocol, then install
+    // the built package below through its supported runtime API.
+    enableExtensions: true,
     defaultViewport: { width: 1100, height: 760 },
     args: ["--no-first-run", "--no-default-browser-check", "--disable-component-update"],
   });
   fixturePage = await browser.newPage();
-  const extensions = await browser.extensions();
-  const installed = [...extensions.values()].find((item) => item.version === "2.0.0");
+  const extensionId = await browser.installExtension(path.join(root, "dist"));
+  const installed = (await browser.extensions()).get(extensionId);
   if (!installed) throw new Error("PixelParity 2.0.0 was not installed.");
   extension = installed;
   await fixturePage.setViewport({ width: 1000, height: 700, deviceScaleFactor: 1 });
