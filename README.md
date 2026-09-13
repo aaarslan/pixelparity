@@ -56,6 +56,18 @@ The popup reads the shortcut Chrome actually assigned through `commands.getAll()
 If Chrome leaves the shortcut unassigned because of a conflict, PixelParity says so
 instead of displaying a hard-coded key combination.
 
+### Reproduce a responsive mismatch
+
+1. In **Inspect**, confirm the affected view's layout viewport, Chrome tab zoom, and
+   responsive range.
+2. Select **Set baseline** while the view is working.
+3. Resize the viewport and/or change Chrome's tab zoom until the mismatch appears.
+4. Open **Export** and select **Copy issue-ready report**. The Markdown report carries
+   baseline and reproduced viewport, zoom, visual-scale, DPR, and breakpoint values.
+
+The report intentionally excludes URLs, titles, and page content. Add the affected
+page, build, expected behavior, and observed behavior yourself before sharing it.
+
 ## Permissions
 
 The manifest declares exactly four permissions:
@@ -135,6 +147,11 @@ screenshots and promos are generated from the shipping Preact components with
 CI runs formatting, linting, type checking, unit/component/accessibility tests,
 package verification, dependency auditing, reproducibility checks, and packaged
 extension E2E on Linux, macOS, and Windows.
+
+`tests/fixtures/responsive-bug.html` is a local, deliberate navigation-overflow
+fixture. The packaged-extension test captures its wide baseline, narrows the
+viewport, changes tab zoom, and verifies the issue-report flow without accessing an
+external site.
 
 ## Limitations
 

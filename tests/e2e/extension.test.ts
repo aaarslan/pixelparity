@@ -45,8 +45,16 @@ async function waitForMetric(
 }
 
 beforeAll(async () => {
-  const fixture = await readFile(path.join(root, "tests/fixtures/index.html"));
-  server = createServer((_request, response) => {
+  const fixtures = new Map([
+    ["/", await readFile(path.join(root, "tests/fixtures/index.html"))],
+    [
+      "/responsive-bug.html",
+      await readFile(path.join(root, "tests/fixtures/responsive-bug.html")),
+    ],
+  ]);
+  server = createServer((request, response) => {
+    const pathname = new URL(request.url ?? "/", "http://127.0.0.1").pathname;
+    const fixture = fixtures.get(pathname) ?? fixtures.get("/");
     response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
     response.end(fixture);
   });
@@ -54,23 +62,23 @@ beforeAll(async () => {
   const address = server.address();
   if (!address || typeof address === "string")
     throw new Error("Fixture server did not bind.");
-  fixtureUrl = `http://127.0.0.1:${address.port}/`;
+  fixtureUrl = `http://127.0.0.1:${address.port}/responsive-bug.html`;
 
   const executablePath =
-    process.env.PUPPETEER_EXECUTABLE_PATH ??
-    (process.platform === "darwin"
-      ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-      : await puppeteer.executablePath());
+    process.env.PUPPETEER_EXECUTABLE_PATH || (await puppeteer.executablePath());
   browser = await puppeteer.launch({
     executablePath,
     headless: process.env.PIXELPARITY_HEADLESS === "1",
-    enableExtensions: [path.join(root, "dist")],
+    // Chrome 137+ no longer supports loading unpacked extensions through
+    // command-line flags. Enable Puppeteer's extension protocol, then install
+    // the built package below through its supported runtime API.
+    enableExtensions: true,
     defaultViewport: { width: 1100, height: 760 },
     args: ["--no-first-run", "--no-default-browser-check", "--disable-component-update"],
   });
   fixturePage = await browser.newPage();
-  const extensions = await browser.extensions();
-  const installed = [...extensions.values()].find((item) => item.version === "2.0.0");
+  const extensionId = await browser.installExtension(path.join(root, "dist"));
+  const installed = (await browser.extensions()).get(extensionId);
   if (!installed) throw new Error("PixelParity 2.0.0 was not installed.");
   extension = installed;
   await fixturePage.setViewport({ width: 1000, height: 700, deviceScaleFactor: 1 });
@@ -154,6 +162,13 @@ describe("packaged extension", () => {
     });
     await waitForMetric(panel, "browser-zoom", /^125\s*%$/);
 
+    await panel.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (typeof tab?.id !== "number") throw new Error("No active tab");
+      await chrome.tabs.setZoom(tab.id, 1);
+    });
+    await waitForMetric(panel, "browser-zoom", /^100\s*%$/);
+
     const baselineViewport = await fixturePage.evaluate(() => ({
       width: window.innerWidth,
       height: window.innerHeight,
@@ -164,7 +179,7 @@ describe("packaged extension", () => {
       new RegExp(`^${baselineViewport.width} × ${baselineViewport.height}`),
     );
     await panel.click(".baseline-card .button");
-    await fixturePage.setViewport({ width: 880, height: 650, deviceScaleFactor: 1 });
+    await fixturePage.setViewport({ width: 700, height: 650, deviceScaleFactor: 1 });
     const resizedViewport = await fixturePage.evaluate(() => ({
       width: window.innerWidth,
       height: window.innerHeight,
@@ -184,6 +199,17 @@ describe("packaged extension", () => {
       {},
       expectedDelta,
     );
+    await panel.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (typeof tab?.id !== "number") throw new Error("No active tab");
+      await chrome.tabs.setZoom(tab.id, 1.25);
+    });
+    await waitForMetric(panel, "browser-zoom", /^125\s*%$/);
+    expect(
+      await fixturePage.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth,
+      ),
+    ).toBe(true);
 
     const originalPanelValue = await metricValue(panel, "layout-viewport");
     const otherTab = await browser.newPage();
@@ -227,6 +253,13 @@ describe("packaged extension", () => {
 
     await panel.click(".panel-nav button:nth-child(3)");
     await panel.waitForSelector(".export-card");
+    await panel.waitForSelector(".issue-report-card");
+    await panel.click(".issue-report-card .button");
+    await panel.waitForFunction(() =>
+      [...document.querySelectorAll('[role="status"]')].some((element) =>
+        element.textContent?.includes("Issue-ready report copied"),
+      ),
+    );
     await panel.click(".export-card .button--primary");
     await panel.waitForFunction(() =>
       [...document.querySelectorAll('[role="status"]')].some((element) =>

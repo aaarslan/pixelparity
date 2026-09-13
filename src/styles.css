@@ -926,6 +926,48 @@
     margin-block: var(--space-2) var(--space-4);
   }
 
+  .issue-report-card .supporting-copy {
+    margin-block: var(--space-2) var(--space-3);
+  }
+
+  .reproduction-card > ol {
+    display: grid;
+    gap: var(--space-2);
+    margin-block-start: var(--space-3);
+    counter-reset: reproduction-step;
+  }
+
+  .reproduction-card li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-2);
+    align-items: baseline;
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .reproduction-card li::before {
+    display: grid;
+    place-items: center;
+    inline-size: 18px;
+    block-size: 18px;
+    border-radius: 50%;
+    background: var(--surface-accent);
+    color: var(--accent-strong);
+    content: counter(reproduction-step);
+    counter-increment: reproduction-step;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .reproduction-card li strong {
+    color: var(--text);
+  }
+
+  .reproduction-card li span {
+    grid-column: 2;
+  }
+
   .format-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));

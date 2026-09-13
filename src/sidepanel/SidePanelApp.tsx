@@ -23,6 +23,7 @@ import {
 import { ERROR_CONTENT, toStableError } from "../shared/errors";
 import { downloadJson, EXPORT_LABELS, serializeSnapshot } from "../shared/exports";
 import { formatTimestamp } from "../shared/format";
+import { serializeIssueReport } from "../shared/issue-report";
 import { MESSAGE_TYPES, isLiveBridgeMessage } from "../shared/protocol";
 import { initializeStorage, savePreferences } from "../shared/storage";
 import { applyPreferencesToDocument } from "../shared/theme";
@@ -373,12 +374,13 @@ function BreakpointManager({
 
 function ExportPanel({
   snapshot,
+  baseline,
   preferences,
   onPreferencesChange,
   onStatus,
 }: Pick<
   SidePanelViewProps,
-  "snapshot" | "preferences" | "onPreferencesChange" | "onStatus"
+  "snapshot" | "baseline" | "preferences" | "onPreferencesChange" | "onStatus"
 >) {
   const [format, setFormat] = useState<ExportFormat>(preferences.defaultExportFormat);
   const copy = async () => {
@@ -460,6 +462,31 @@ function ExportPanel({
             <Icon name="download" /> Download JSON
           </button>
         </div>
+      </section>
+      <section class="panel-card issue-report-card">
+        <p class="eyebrow">Baseline comparison</p>
+        <h2>Copy an issue-ready report</h2>
+        <p class="supporting-copy">
+          {baseline
+            ? "A concise Markdown report carries the baseline and reproduced viewport, zoom, scale, DPR, and breakpoint values. Add product context manually."
+            : "Capture a baseline in Inspect, then reproduce the viewport or Chrome zoom mismatch to create a comparison report."}
+        </p>
+        <button
+          class="button button--secondary"
+          type="button"
+          disabled={!snapshot || !baseline}
+          onClick={async () => {
+            if (!snapshot || !baseline) return;
+            try {
+              await navigator.clipboard.writeText(serializeIssueReport(baseline, snapshot));
+              onStatus("Issue-ready report copied. Add product context before sharing.");
+            } catch {
+              onStatus("Copy failed. Chrome did not allow clipboard access.");
+            }
+          }}
+        >
+          <Icon name="copy" /> Copy issue-ready report
+        </button>
       </section>
       {snapshot && (
         <section class="panel-card preview-card">
@@ -593,6 +620,35 @@ export function SidePanelView(props: SidePanelViewProps) {
                 </button>
               )}
             </section>
+            <section
+              class="panel-card reproduction-card"
+              aria-labelledby="reproduction-guide-title"
+            >
+              <p class="eyebrow">Responsive issue workflow</p>
+              <h2 id="reproduction-guide-title">Inspect, baseline, reproduce, export</h2>
+              <ol>
+                <li>
+                  <strong>Inspect</strong>
+                  <span>
+                    Record the current viewport, Chrome tab zoom, and responsive range.
+                  </span>
+                </li>
+                <li>
+                  <strong>{baseline ? "Baseline captured" : "Capture a baseline"}</strong>
+                  <span>
+                    {baseline
+                      ? "Resize or change Chrome tab zoom to reproduce the mismatch."
+                      : "Set the working state before changing the viewport or zoom."}
+                  </span>
+                </li>
+                <li>
+                  <strong>Export</strong>
+                  <span>
+                    Open Export to copy an issue-ready comparison with no page metadata.
+                  </span>
+                </li>
+              </ol>
+            </section>
             <section class="panel-card">
               <div class="section-heading">
                 <div>
@@ -619,6 +675,7 @@ export function SidePanelView(props: SidePanelViewProps) {
         {section === "export" && (
           <ExportPanel
             snapshot={snapshot}
+            baseline={baseline}
             preferences={props.preferences}
             onPreferencesChange={props.onPreferencesChange}
             onStatus={props.onStatus}
