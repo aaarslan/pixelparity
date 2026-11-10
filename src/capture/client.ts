@@ -2,13 +2,16 @@ import {
   assertCaptureState,
   CAPTURE_INTERVAL_MS,
   CAPTURE_PORT,
+  CAPTURE_SCROLL_EPSILON,
   type CaptureBitmapDimensions,
   type CaptureOptions,
   type CaptureRect,
   type CaptureResult,
   captureBitmapScale,
   captureDimensions,
+  captureScrollMatches,
   clipCaptureRegion,
+  fullCaptureDimensions,
   isCapturePageState,
   isCaptureRect,
   planFullCapture,
@@ -175,7 +178,7 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
         });
     captureDimensions(outputArea.width, outputArea.height, initial.devicePixelRatio);
     const tiles = fullPage
-      ? planFullCapture(initial)
+      ? planFullCapture(initial).reverse()
       : [{ scrollX: initial.scrollX, scrollY: initial.scrollY, area: outputArea }];
     let firstBitmap: CaptureBitmapDimensions | undefined;
     let completed = 0;
@@ -195,10 +198,7 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
         if (!isCapturePageState(scrolled.state))
           throw new Error("The page could not be scrolled for capture.");
         assertCaptureState(initial, scrolled.state);
-        if (
-          Math.abs(scrolled.state.scrollX - tile.scrollX) > 1 ||
-          Math.abs(scrolled.state.scrollY - tile.scrollY) > 1
-        ) {
+        if (!captureScrollMatches(scrolled.state, tile.scrollX, tile.scrollY)) {
           throw new Error(
             "The page changed size or uses a custom scrolling layout. Capture a viewport or region instead.",
           );
@@ -214,8 +214,10 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
       const before = await connection.state(signal);
       assertCaptureState(initial, before);
       if (
-        Math.abs(before.scrollX - tile.scrollX) > 1 ||
-        Math.abs(before.scrollY - tile.scrollY) > 1
+        fullPage
+          ? !captureScrollMatches(before, tile.scrollX, tile.scrollY)
+          : Math.abs(before.scrollX - tile.scrollX) > CAPTURE_SCROLL_EPSILON ||
+            Math.abs(before.scrollY - tile.scrollY) > CAPTURE_SCROLL_EPSILON
       ) {
         throw new Error("The page moved during capture. Keep it still and retry.");
       }
@@ -229,8 +231,8 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
         after.documentWidth !== initial.documentWidth ||
         after.documentHeight !== initial.documentHeight;
       if (
-        Math.abs(before.scrollX - after.scrollX) > 0.5 ||
-        Math.abs(before.scrollY - after.scrollY) > 0.5
+        Math.abs(before.scrollX - after.scrollX) > CAPTURE_SCROLL_EPSILON ||
+        Math.abs(before.scrollY - after.scrollY) > CAPTURE_SCROLL_EPSILON
       ) {
         throw new Error(
           "The page moved while Chrome was capturing. Keep it still and retry.",
@@ -243,46 +245,29 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
         const scale = captureBitmapScale(initial, bitmap, firstBitmap);
         if (!canvas) {
           firstBitmap = { width: bitmap.width, height: bitmap.height };
-          const dimensions = captureDimensions(
-            outputArea.width,
-            outputArea.height,
-            scale.x,
-            scale.y,
-          );
+          const dimensions = fullPage
+            ? fullCaptureDimensions(initial, after, bitmap)
+            : captureDimensions(outputArea.width, outputArea.height, scale.x, scale.y);
           canvas = new OffscreenCanvas(dimensions.width, dimensions.height);
         }
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Chrome could not create the screenshot canvas.");
         if (fullPage) {
-          const draw = tileDrawPlan(
-            tile.area,
-            after.scrollX,
-            after.scrollY,
-            scale.x,
-            scale.y,
-          );
+          const draw = tileDrawPlan(tile.area, initial, after, bitmap, canvas);
           const { source, destination } = draw;
-          if (
-            source.x < 0 ||
-            source.y < 0 ||
-            source.x + source.width > bitmap.width + 1e-7 ||
-            source.y + source.height > bitmap.height + 1e-7
-          ) {
-            throw new Error(
-              "The page changed its layout during capture. Retry after it finishes loading.",
+          if (destination.width > 0 && destination.height > 0) {
+            context.drawImage(
+              bitmap,
+              source.x,
+              source.y,
+              source.width,
+              source.height,
+              destination.x,
+              destination.y,
+              destination.width,
+              destination.height,
             );
           }
-          context.drawImage(
-            bitmap,
-            source.x,
-            source.y,
-            source.width,
-            source.height,
-            destination.x,
-            destination.y,
-            destination.width,
-            destination.height,
-          );
         } else {
           context.drawImage(
             bitmap,

@@ -8,7 +8,10 @@ import {
   type CapturePageState,
   captureBitmapScale,
   captureDimensions,
+  captureScrollMatches,
+  captureScrollTolerance,
   clipCaptureRegion,
+  fullCaptureDimensions,
   isCapturePageState,
   isCaptureRequest,
   planFullCapture,
@@ -37,6 +40,119 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+function geometryFixture({
+  devicePixelRatio = 1.25,
+  scrollbar = 0,
+  viewportWidth = 803,
+  viewportHeight = 901,
+  documentWidth = 2251,
+  documentHeight = 2487,
+  bitmapWidth = Math.round(viewportWidth * devicePixelRatio),
+  bitmapHeight = Math.round(viewportHeight * devicePixelRatio),
+  edgeX = 0,
+  edgeY = 0,
+} = {}) {
+  const bitmap = { width: bitmapWidth, height: bitmapHeight };
+  const content = {
+    width: bitmap.width - Math.round(scrollbar * devicePixelRatio),
+    height: bitmap.height - Math.round(scrollbar * devicePixelRatio),
+  };
+  const page = {
+    ...state,
+    viewportWidth,
+    viewportHeight,
+    contentWidth: content.width / devicePixelRatio,
+    contentHeight: content.height / devicePixelRatio,
+    documentWidth,
+    documentHeight,
+    devicePixelRatio,
+  };
+  const physical = {
+    width: Math.max(content.width, Math.round(documentWidth * devicePixelRatio) + edgeX),
+    height: Math.max(content.height, Math.round(documentHeight * devicePixelRatio) + edgeY),
+  };
+  const at = (x: number, y: number, roundX = Math.floor, roundY = Math.ceil) => ({
+    ...page,
+    scrollX:
+      Math.max(0, Math.min(physical.width - content.width, roundX(x * devicePixelRatio))) /
+      devicePixelRatio,
+    scrollY:
+      Math.max(
+        0,
+        Math.min(physical.height - content.height, roundY(y * devicePixelRatio)),
+      ) / devicePixelRatio,
+  });
+  return { page, bitmap, content, physical, at };
+}
+
+function assertLabelledCapture(
+  fixture: ReturnType<typeof geometryFixture>,
+  roundX = Math.floor,
+  roundY = Math.ceil,
+) {
+  const { page, bitmap, content, physical, at } = fixture;
+  const tiles = planFullCapture(page);
+  const last = tiles.at(-1);
+  if (!last) throw new Error("Missing final tile");
+  const output = fullCaptureDimensions(
+    page,
+    at(last.scrollX, last.scrollY, roundX, roundY),
+    bitmap,
+  );
+  expect(output).toEqual(physical);
+  const labelsX = new Int32Array(output.width).fill(-1);
+  const labelsY = new Int32Array(output.height).fill(-1);
+  const rows = new Map<number, ReturnType<typeof tileDrawPlan>[]>();
+  let paintedPixels = 0;
+  for (const tile of tiles) {
+    const current = at(tile.scrollX, tile.scrollY, roundX, roundY);
+    expect(captureScrollMatches(current, tile.scrollX, tile.scrollY)).toBe(true);
+    const draw = tileDrawPlan(tile.area, page, current, bitmap, output);
+    const { source, destination } = draw;
+    expect(source.x).toBeGreaterThanOrEqual(0);
+    expect(source.y).toBeGreaterThanOrEqual(0);
+    expect(source.x + source.width).toBeLessThanOrEqual(content.width);
+    expect(source.y + source.height).toBeLessThanOrEqual(content.height);
+    expect(source.width).toBe(destination.width);
+    expect(source.height).toBe(destination.height);
+    for (const coordinate of Object.values(source))
+      expect(Number.isInteger(coordinate)).toBe(true);
+    const originX = Math.round(current.scrollX * page.devicePixelRatio);
+    const originY = Math.round(current.scrollY * page.devicePixelRatio);
+    if (source.width > 0) expect(originX + source.x).toBe(destination.x);
+    if (source.height > 0) expect(originY + source.y).toBe(destination.y);
+    if (tile.area.y === 0) {
+      for (let x = 0; x < source.width; x += 1)
+        labelsX[destination.x + x] = originX + source.x + x;
+    }
+    if (tile.area.x === 0) {
+      for (let y = 0; y < source.height; y += 1)
+        labelsY[destination.y + y] = originY + source.y + y;
+    }
+    const row = rows.get(tile.area.y) ?? [];
+    row.push(draw);
+    rows.set(tile.area.y, row);
+    paintedPixels += destination.width * destination.height;
+  }
+  let bottom = 0;
+  for (const row of rows.values()) {
+    let right = 0;
+    let height = 0;
+    for (const { destination } of row) {
+      expect(destination.x).toBe(right);
+      expect(destination.y).toBe(bottom);
+      right += destination.width;
+      height = destination.height;
+    }
+    expect(right).toBe(output.width);
+    bottom += height;
+  }
+  expect(bottom).toBe(output.height);
+  expect(paintedPixels).toBe(output.width * output.height);
+  expect(labelsX.findIndex((label, x) => label !== x)).toBe(-1);
+  expect(labelsY.findIndex((label, y) => label !== y)).toBe(-1);
+}
+
 describe("capture geometry and limits", () => {
   it("clips a selection to the visible viewport", () => {
     expect(clipCaptureRegion({ x: -10, y: 20, width: 90, height: 500 }, 320, 240)).toEqual({
@@ -59,7 +175,7 @@ describe("capture geometry and limits", () => {
     expect(captureDimensions(800, 600, 2)).toEqual({ width: 1600, height: 1200 });
   });
 
-  it("rejects unsafe canvases before allocation", () => {
+  it("rejects unsafe canvases before allocation and after edge measurement", () => {
     expect(captureDimensions(8000, 6000, 1)).toEqual({ width: 8000, height: 6000 });
     expect(() => captureDimensions(8000, 6001, 1)).toThrow("48 megapixel");
     expect(() => captureDimensions(100, 16_381, 2)).toThrow("32,760");
@@ -68,157 +184,287 @@ describe("capture geometry and limits", () => {
     expect(() => captureDimensions(8000, 6000, 1, 6001 / 6000)).toThrow("48 megapixel");
     expect(() => captureDimensions(100, 16_381, 1, 2)).toThrow("32,760");
     expect(() => captureDimensions(100, 100, 1, 0)).toThrow("invalid");
+    const page = {
+      ...state,
+      devicePixelRatio: 1,
+      documentWidth: 8000,
+      documentHeight: 6000,
+    };
+    expect(() =>
+      fullCaptureDimensions(
+        page,
+        { ...page, scrollX: 7001, scrollY: 5500 },
+        { width: 1015, height: 515 },
+      ),
+    ).toThrow("48 megapixel");
   });
 
-  it("plans the final clamped tile without duplicating the overlap band", () => {
+  it("plans overlapping viewports with disjoint final ownership bands", () => {
     const tiles = planFullCapture(state);
-    expect(tiles.map((tile) => tile.scrollY)).toEqual([0, 500, 750]);
+    expect(tiles.map((tile) => tile.scrollY)).toEqual([0, 494, 752]);
     expect(tiles.map((tile) => tile.area)).toEqual([
-      { x: 0, y: 0, width: 1000, height: 500 },
-      { x: 0, y: 500, width: 1000, height: 500 },
-      { x: 0, y: 1000, width: 1000, height: 250 },
+      { x: 0, y: 0, width: 1000, height: 496 },
+      { x: 0, y: 496, width: 1000, height: 496 },
+      { x: 0, y: 992, width: 1000, height: 258 },
     ]);
-    const last = tiles[2];
+    const last = tiles.at(-1);
     if (!last) throw new Error("Missing final tile");
-    expect(tileDrawPlan(last.area, 0, 750, 2)).toEqual({
-      source: { x: 0, y: 500, width: 2000, height: 500 },
-      destination: { x: 0, y: 2000, width: 2000, height: 500 },
-    });
-  });
-
-  it("covers horizontal overflow and partial final rows exactly once", () => {
-    const wide = { ...state, documentWidth: 1450, documentHeight: 1250 };
-    const tiles = planFullCapture(wide);
-    expect(tiles).toHaveLength(6);
-    expect(tiles.map((tile) => [tile.scrollX, tile.scrollY])).toEqual([
-      [0, 0],
-      [450, 0],
-      [0, 500],
-      [450, 500],
-      [0, 750],
-      [450, 750],
-    ]);
     expect(
-      tiles.reduce((total, tile) => total + tile.area.width * tile.area.height, 0),
+      tileDrawPlan(
+        last.area,
+        state,
+        { ...state, scrollY: 750 },
+        { width: 2030, height: 1030 },
+        { width: 2000, height: 2500 },
+      ),
+    ).toEqual({
+      source: { x: 0, y: 484, width: 2000, height: 516 },
+      destination: { x: 0, y: 1984, width: 2000, height: 516 },
+    });
+    const wide = planFullCapture({ ...state, documentWidth: 1450 });
+    expect(wide).toHaveLength(6);
+    expect(
+      wide.reduce((total, tile) => total + tile.area.width * tile.area.height, 0),
     ).toBe(1450 * 1250);
-    expect(tiles.at(-1)?.area).toEqual({ x: 1000, y: 1000, width: 450, height: 250 });
   });
 
-  it("uses shared rounded boundaries without seams at fractional scale", () => {
-    const top = tileDrawPlan({ x: 0, y: 0, width: 803, height: 501 }, 0, 0, 1.25);
-    const bottom = tileDrawPlan({ x: 0, y: 501, width: 803, height: 213 }, 0, 213, 1.25);
-    expect(top.destination.y + top.destination.height).toBe(bottom.destination.y);
-    expect(bottom.destination.y + bottom.destination.height).toBe(Math.round(714 * 1.25));
+  it("handles the reported 901 to 900.8 scroll quantization without missing content rows", () => {
+    const fixture = geometryFixture({ documentHeight: 18000, documentWidth: 803 });
+    expect(captureScrollMatches({ ...fixture.page, scrollY: 900.8 }, 0, 901)).toBe(true);
+    expect(fixture.page.contentHeight).toBe(900.8);
+    assertLabelledCapture(fixture, Math.floor, Math.floor);
+    expect(fixture.physical.height).toBe(22500);
   });
 
-  it.each([
-    { viewportWidth: 803, viewportHeight: 901, width: 1004, height: 1126 },
-    { viewportWidth: 901, viewportHeight: 803, width: 1126, height: 1004 },
-  ])(
-    "fits independently rounded bitmap axes for $viewportWidth × $viewportHeight CSS pixels",
-    ({ viewportWidth, viewportHeight, width, height }) => {
-      const bitmap = { width, height };
-      const viewport = { viewportWidth, viewportHeight };
-      const { x: scaleX, y: scaleY } = captureBitmapScale(viewport, bitmap);
-      expect(captureBitmapScale(viewport, bitmap, bitmap)).toEqual({
-        x: scaleX,
-        y: scaleY,
-      });
-      const draw = tileDrawPlan(
-        { x: 0, y: 0, width: viewportWidth, height: viewportHeight },
-        0,
-        0,
-        scaleX,
-        scaleY,
-      );
-      expect(captureDimensions(viewportWidth, viewportHeight, scaleX, scaleY)).toEqual({
-        width,
-        height,
-      });
-      expect(draw.source.x).toBe(0);
-      expect(draw.source.y).toBe(0);
-      expect(draw.source.width).toBeCloseTo(width, 10);
-      expect(draw.source.height).toBeCloseTo(height, 10);
-      expect(draw.destination).toEqual({ x: 0, y: 0, width, height });
-    },
-  );
-
-  it.each([
-    { devicePixelRatio: 0.8, finalWidth: 137, finalHeight: 219, scrollbar: 0 },
-    { devicePixelRatio: 1.1, finalWidth: 137, finalHeight: 219, scrollbar: 15 },
-    { devicePixelRatio: 1.25, finalWidth: 137, finalHeight: 219, scrollbar: 0 },
-    { devicePixelRatio: 1.5, finalWidth: 137, finalHeight: 219, scrollbar: 15 },
-    { devicePixelRatio: 0.8, finalWidth: 1, finalHeight: 1, scrollbar: 0 },
-  ])(
-    "covers clamped final tiles at $devicePixelRatio DPR with a $finalWidth × $finalHeight final band",
-    ({ devicePixelRatio, finalWidth, finalHeight, scrollbar }) => {
-      const viewportWidth = 803;
-      const viewportHeight = 901;
-      const contentWidth = viewportWidth - scrollbar;
-      const contentHeight = viewportHeight - scrollbar;
-      const page = {
-        ...state,
-        viewportWidth,
-        viewportHeight,
-        contentWidth,
-        contentHeight,
-        documentWidth: contentWidth * 2 + finalWidth,
-        documentHeight: contentHeight * 2 + finalHeight,
+  it.each(
+    [0.25, 0.625, 0.8, 1.25, 1.5, 2, 4].flatMap((devicePixelRatio) =>
+      [0, 15].flatMap((scrollbar) =>
+        ["floor", "ceil"].map((direction) => ({ devicePixelRatio, scrollbar, direction })),
+      ),
+    ),
+  )(
+    "preserves physical pixel labels at $devicePixelRatio DPR with $scrollbar CSS-pixel gutters and $direction X quantization",
+    ({ devicePixelRatio, scrollbar, direction }) => {
+      const fixture = geometryFixture({
         devicePixelRatio,
-      };
-      const bitmap = {
-        width: Math.round(viewportWidth * devicePixelRatio),
-        height: Math.round(viewportHeight * devicePixelRatio),
-      };
-      const scale = captureBitmapScale(page, bitmap);
-      const dimensions = captureDimensions(
-        page.documentWidth,
-        page.documentHeight,
-        scale.x,
-        scale.y,
+        scrollbar,
+        ...(devicePixelRatio === 4 ? { documentWidth: 1200, documentHeight: 2400 } : {}),
+      });
+      assertLabelledCapture(
+        fixture,
+        direction === "floor" ? Math.floor : Math.ceil,
+        direction === "floor" ? Math.ceil : Math.floor,
       );
-      const tiles = planFullCapture(page);
-      const draws = tiles.map((tile) =>
-        tileDrawPlan(tile.area, tile.scrollX, tile.scrollY, scale.x, scale.y),
-      );
-      expect(draws).toHaveLength(9);
-      for (const [index, draw] of draws.entries()) {
-        expect(draw.source.x).toBeGreaterThanOrEqual(0);
-        expect(draw.source.y).toBeGreaterThanOrEqual(0);
-        expect(draw.source.width).toBeGreaterThan(0);
-        expect(draw.source.height).toBeGreaterThan(0);
-        expect(draw.source.x + draw.source.width).toBeLessThanOrEqual(bitmap.width + 1e-7);
-        expect(draw.source.y + draw.source.height).toBeLessThanOrEqual(
-          bitmap.height + 1e-7,
-        );
-        expect(draw.destination.width).toBeGreaterThanOrEqual(0);
-        expect(draw.destination.height).toBeGreaterThanOrEqual(0);
-        const previousColumn = index % 3 ? draws[index - 1]?.destination : undefined;
-        const previousRow = index >= 3 ? draws[index - 3]?.destination : undefined;
-        expect(draw.destination.x).toBe(
-          previousColumn ? previousColumn.x + previousColumn.width : 0,
-        );
-        expect(draw.destination.y).toBe(
-          previousRow ? previousRow.y + previousRow.height : 0,
-        );
-      }
-      const last = draws.at(-1);
-      if (!last) throw new Error("Missing final tile");
-      expect(last.source.x).toBeGreaterThan(0);
-      expect(last.source.y).toBeGreaterThan(0);
-      expect(last.destination.x + last.destination.width).toBe(dimensions.width);
-      expect(last.destination.y + last.destination.height).toBe(dimensions.height);
-      expect(
-        draws.reduce(
-          (total, draw) => total + draw.destination.width * draw.destination.height,
-          0,
-        ),
-      ).toBe(dimensions.width * dimensions.height);
     },
   );
 
-  it("rejects any bitmap dimension change after the first frame", () => {
-    const viewport = { viewportWidth: 803, viewportHeight: 901 };
+  it.each([-1, 1])(
+    "uses a measured terminal edge %s pixel from the rounded DOM extent without moving content",
+    (edge) => {
+      assertLabelledCapture(
+        geometryFixture({ edgeX: edge, edgeY: -edge, documentHeight: 2500 }),
+      );
+    },
+  );
+
+  it.each(["horizontal", "vertical"])(
+    "shares canonical physical boundaries across many fractional %s strides",
+    (axis) => {
+      assertLabelledCapture(
+        geometryFixture({
+          devicePixelRatio: 0.625,
+          scrollbar: 15,
+          viewportWidth: axis === "horizontal" ? 1048 : 515,
+          viewportHeight: axis === "horizontal" ? 515 : 1048,
+          documentWidth: axis === "horizontal" ? 23000 : 500,
+          documentHeight: axis === "horizontal" ? 500 : 23000,
+        }),
+      );
+    },
+  );
+
+  it("supports a final band smaller than one physical pixel", () => {
+    const fixture = geometryFixture({
+      devicePixelRatio: 0.8,
+      documentWidth: 1596,
+      documentHeight: 1793,
+    });
+    const last = planFullCapture(fixture.page).at(-1);
+    expect(last?.area.width).toBeLessThan(1 / 0.8);
+    assertLabelledCapture(fixture);
+  });
+
+  it.each([
+    {
+      devicePixelRatio: 3,
+      scrollbar: 31 / 3,
+      viewportWidth: 268,
+      viewportHeight: 300,
+      documentWidth: 760,
+      documentHeight: 1430,
+      bitmapWidth: 803,
+      bitmapHeight: 901,
+      edgeX: 1,
+      edgeY: 1,
+    },
+    {
+      devicePixelRatio: 1.1,
+      scrollbar: 0,
+      viewportWidth: 730,
+      viewportHeight: 819,
+      documentWidth: 2178,
+      documentHeight: 4075,
+      bitmapWidth: 803,
+      bitmapHeight: 901,
+      edgeX: 0,
+      edgeY: 0,
+    },
+  ])("assigns a rounded terminal boundary once at $devicePixelRatio DPR", (options) => {
+    const fixture = geometryFixture(options);
+    const tiles = planFullCapture(fixture.page);
+    expect(tiles.every((tile) => tile.area.width > 0 && tile.area.height > 0)).toBe(true);
+    assertLabelledCapture(fixture, Math.floor, Math.floor);
+    assertLabelledCapture(fixture, Math.ceil, Math.ceil);
+  });
+
+  it("retains the initial extent through growth and rejects shrink or an unreachable edge", () => {
+    const { page, bitmap, at } = geometryFixture({ scrollbar: 15, edgeX: 1, edgeY: -1 });
+    const last = planFullCapture(page).at(-1);
+    if (!last) throw new Error("Missing final tile");
+    const current = at(last.scrollX, last.scrollY);
+    const output = fullCaptureDimensions(page, current, bitmap);
+    const grown = {
+      ...page,
+      documentWidth: page.documentWidth + 100,
+      documentHeight: page.documentHeight + 100,
+      scrollX: Math.floor(last.scrollX * 1.25) / 1.25,
+      scrollY: Math.floor(last.scrollY * 1.25) / 1.25,
+    };
+    expect(captureScrollMatches(grown, last.scrollX, last.scrollY)).toBe(true);
+    const nominal = captureDimensions(
+      page.documentWidth,
+      page.documentHeight,
+      page.devicePixelRatio,
+    );
+    expect(fullCaptureDimensions(page, grown, bitmap)).toEqual(nominal);
+    for (const dimensions of [output, nominal]) {
+      const draw = tileDrawPlan(last.area, page, grown, bitmap, dimensions);
+      expect(draw.source.x + Math.round(grown.scrollX * 1.25)).toBe(draw.destination.x);
+      expect(draw.source.y + Math.round(grown.scrollY * 1.25)).toBe(draw.destination.y);
+      expect(draw.destination.x + draw.destination.width).toBe(dimensions.width);
+      expect(draw.destination.y + draw.destination.height).toBe(dimensions.height);
+    }
+    expect(() =>
+      fullCaptureDimensions(
+        page,
+        { ...current, documentHeight: page.documentHeight - 1 },
+        bitmap,
+      ),
+    ).toThrow("smaller");
+    expect(() =>
+      tileDrawPlan(
+        last.area,
+        page,
+        { ...current, documentHeight: page.documentHeight - 1 },
+        bitmap,
+        output,
+      ),
+    ).toThrow("layout");
+    expect(() =>
+      fullCaptureDimensions(page, { ...current, scrollY: current.scrollY - 10 }, bitmap),
+    ).toThrow("capture edge");
+  });
+
+  it.each([0.25, 0.8, 1.25, 2, 4])(
+    "rejects movement beyond the requested-scroll tolerance at %s DPR",
+    (devicePixelRatio) => {
+      const page = { ...state, documentWidth: 3000, devicePixelRatio };
+      const tolerance = captureScrollTolerance(page);
+      for (const direction of [-1, 1]) {
+        expect(
+          captureScrollMatches(
+            { ...page, scrollX: 100 + direction * tolerance, scrollY: 100 },
+            100,
+            100,
+          ),
+        ).toBe(true);
+        expect(
+          captureScrollMatches(
+            { ...page, scrollX: 100 + direction * (tolerance + 0.01), scrollY: 100 },
+            100,
+            100,
+          ),
+        ).toBe(false);
+        expect(
+          captureScrollMatches(
+            { ...page, scrollX: 100, scrollY: 100 + direction * (tolerance + 0.01) },
+            100,
+            100,
+          ),
+        ).toBe(false);
+      }
+    },
+  );
+
+  it("bounds frame count and rejects viewports too small for overlap", () => {
+    expect(planFullCapture({ ...state, documentHeight: 19840 })).toHaveLength(40);
+    expect(() => planFullCapture({ ...state, documentHeight: 19841 })).toThrow("40 frames");
+    expect(() =>
+      planFullCapture({ ...state, contentHeight: 4, viewportHeight: 4 }),
+    ).toThrow("too small");
+    expect(() => planFullCapture({ ...state, contentWidth: 4, viewportWidth: 4 })).toThrow(
+      "too small",
+    );
+    expect(() =>
+      assertCaptureState(state, { ...state, documentHeight: 50000 }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    {
+      viewportWidth: 803,
+      viewportHeight: 901,
+      width: 1004,
+      height: 1126,
+      devicePixelRatio: 1.25,
+    },
+    {
+      viewportWidth: 901,
+      viewportHeight: 803,
+      width: 1126,
+      height: 1004,
+      devicePixelRatio: 1.25,
+    },
+    {
+      viewportWidth: 803,
+      viewportHeight: 901,
+      width: 3213,
+      height: 3602,
+      devicePixelRatio: 4,
+    },
+  ])(
+    "accepts independently rounded bitmap axes at $devicePixelRatio DPR",
+    ({ viewportWidth, viewportHeight, width, height, devicePixelRatio }) => {
+      const viewport = { viewportWidth, viewportHeight, devicePixelRatio };
+      const bitmap = { width, height };
+      const scale = captureBitmapScale(viewport, bitmap);
+      expect(captureBitmapScale(viewport, bitmap, bitmap)).toEqual(scale);
+      expect(captureDimensions(viewportWidth, viewportHeight, scale.x, scale.y)).toEqual(
+        bitmap,
+      );
+      assertLabelledCapture(
+        geometryFixture({
+          ...viewport,
+          bitmapWidth: width,
+          bitmapHeight: height,
+          ...(devicePixelRatio === 4 ? { documentWidth: 1200, documentHeight: 2400 } : {}),
+        }),
+      );
+    },
+  );
+
+  it("rejects changed or incompatible bitmap dimensions", () => {
+    const viewport = { viewportWidth: 803, viewportHeight: 901, devicePixelRatio: 1.25 };
     const first = { width: 1004, height: 1126 };
     for (const bitmap of [
       { width: 1003, height: 1126 },
@@ -231,10 +477,6 @@ describe("capture geometry and limits", () => {
         "Screenshot dimensions changed",
       );
     }
-  });
-
-  it("rejects bitmap axes that cannot describe one rounded viewport scale", () => {
-    const viewport = { viewportWidth: 803, viewportHeight: 901 };
     for (const bitmap of [
       { width: 1004, height: 1130 },
       { width: 1008, height: 1126 },
@@ -245,18 +487,25 @@ describe("capture geometry and limits", () => {
         "Screenshot dimensions changed",
       );
     }
+    const fixture = geometryFixture();
+    expect(() =>
+      fullCaptureDimensions(fixture.page, fixture.page, { width: 1000, height: 1100 }),
+    ).toThrow("does not match");
   });
 
-  it("bounds the initial document extent without chasing an infinite feed", () => {
-    expect(planFullCapture({ ...state, documentHeight: 20_000 })).toHaveLength(40);
-    expect(() => planFullCapture({ ...state, documentHeight: 20_001 })).toThrow(
-      "40 frames",
-    );
-    const plan = planFullCapture(state);
-    const grown = { ...state, documentHeight: 50_000 };
-    expect(() => assertCaptureState(state, grown)).not.toThrow();
-    expect(plan).toHaveLength(3);
-    expect(plan.at(-1)?.area.y).toBe(1000);
+  it("reads precise usable visual viewport dimensions", () => {
+    vi.stubGlobal("visualViewport", {
+      width: 803.25,
+      height: 900.5,
+      scale: 1,
+      offsetLeft: 0,
+      offsetTop: 0,
+    });
+    const current = new CapturePage("precise-viewport").read();
+    expect(current.contentWidth).toBe(803.25);
+    expect(current.contentHeight).toBe(900.5);
+    expect(current.viewportWidth).toBe(innerWidth);
+    expect(current.viewportHeight).toBe(innerHeight);
   });
 
   it("rejects navigation, pinch zoom, viewport changes and scale changes", () => {

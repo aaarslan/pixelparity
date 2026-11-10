@@ -5,9 +5,9 @@
 | Item | Status |
 | --- | --- |
 | Version and title | 3.0.0 · PixelParity — Layout, Grid & Capture |
-| Local code and package checks | **Passed:** formatting, lint, strict types, 106 tests, production build, archive checks, dependency audit |
+| Local code and package checks | **Passed:** formatting, lint, strict types, 150 tests, production build, archive checks, dependency audit |
 | Installed-Chrome qualification and visual review | **Blocked in this environment; pending on a machine that can run Chrome extensions** |
-| Candidate ZIP | **Built:** 64,571 bytes; 14 runtime files; reproducible |
+| Candidate ZIP | **Built:** 65,100 bytes; 14 runtime files; reproducible |
 | Promotional artwork | **Complete:** 440×280 and 1400×560 RGB PNGs, visually reviewed |
 | Five v3 product screenshots | **Pending:** installed-extension generator is ready but has not run |
 | GitHub source | PR #4 on `feature/pixelparity-3-layout-capture`; runtime qualification remains required before release |
@@ -25,11 +25,16 @@ started at 2.1.0. No production store package or listing was changed.
 - [x] `npm run check` passed with the final production source.
 - [x] Formatting and lint completed without findings.
 - [x] Strict TypeScript checking passed.
-- [x] 106 unit/component tests passed across 13 files, including structural accessibility
+- [x] 150 unit/component tests passed across 14 files, including structural accessibility
   checks. Browser color contrast and rendered layouts remain unverified.
 - [x] PR #4 regression checks passed for numeric editing, fractional bitmap scaling,
   and HTTP-compatible capture initialization. The bundled CSS establishes cascade
   layer order before component styles.
+- [x] Quantized-scroll regressions passed through geometry and the capture client.
+  Source-coordinate labels check complete pixel coverage without duplicates, gaps,
+  shifted content, rescaling, or scrollbar pixels. Cases include fractional/high DPR,
+  measured outer edges, long pages, document changes, and failure cleanup. These
+  tests use simulated browser responses; installed-Chrome capture remains unverified.
 - [x] Profiles control insets, action spacing, narrow-name wrapping, and native theme
   handling reviewed in source. Rendered visual qualification remains pending.
 - [x] Production build and runtime allowlist verification passed.
@@ -46,9 +51,9 @@ started at 2.1.0. No production store package or listing was changed.
 | Evidence | Value |
 | --- | --- |
 | Package | `builds/pixelparity-3.0.0.zip` |
-| SHA-256 | `43ff4d0afa43824bdcc3a789c80d768fbba910e427ddc5710f93fe063a62c721` |
-| Archive size | 64,571 bytes |
-| Uncompressed runtime | 188,305 bytes across 14 files |
+| SHA-256 | `9209207e7ab418df4590566949b6c0144e7db905eac2cd0906b16ee78584060b` |
+| Archive size | 65,100 bytes |
+| Uncompressed runtime | 189,981 bytes across 14 files |
 | Source commit | Recorded by PR #4 and the downloadable release kit's `release-manifest.json` |
 | Node | 24.22.1 |
 | OS | Linux x86_64; Debian 13 runtime; glibc 2.41 |
@@ -82,6 +87,11 @@ be verified. It has no mocked screenshot fallback.
 - [ ] Confirm live viewport/zoom/DPR, profiles, baseline comparison, and exports.
 - [ ] Check all grid types, settings, rulers, element locking, Escape, and teardown.
 - [ ] Check viewport, region, and full-page PNGs, preview, copy, save, and discard.
+- [ ] Capture odd-sized, scrollbar-free and scrollbar-visible pages at 80%, 100%,
+  125%, and 150% zoom. Check horizontal and vertical tile joins, final image edges,
+  and restoration of a nonzero starting scroll position. Inspect the PNG for missing
+  or repeated strips; the local tests simulate browser responses and do not replace
+  this installed-Chrome check.
 - [ ] Check cancellation, tab/navigation/zoom changes, limits, and scroll/style restoration.
 - [ ] Review narrow and wider panels in light/dark themes, visible focus, keyboard
   behavior, contrast, reduced motion, and forced colors.

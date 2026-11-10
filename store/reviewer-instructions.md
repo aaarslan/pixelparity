@@ -37,6 +37,8 @@ size, and zoom unchanged during capture.
    to resize. Enter captures; Escape cancels.
 4. Capture the full main document. Verify scrolling completes and the page returns to
    its prior position. Compare sticky/fixed-element handling with the option toggled.
+   Repeat at 125% zoom on a page without scrollbar gutters and inspect the joins
+   between captured sections and the final right/bottom edges.
 5. Enable a grid and compare capture with PixelParity overlays included versus hidden.
 6. Start a full-page capture and cancel it. Confirm temporary styles/selection UI are
    removed and page interaction resumes.

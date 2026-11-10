@@ -37,12 +37,13 @@ export class CapturePage {
     const body = document.body;
     const scroller = document.scrollingElement ?? root;
     const viewportRoot = document.compatMode === "BackCompat" ? (body ?? root) : root;
+    const viewport = window.visualViewport;
     return {
       documentToken: this.documentToken,
       viewportWidth: innerWidth,
       viewportHeight: innerHeight,
-      contentWidth: viewportRoot.clientWidth || innerWidth,
-      contentHeight: viewportRoot.clientHeight || innerHeight,
+      contentWidth: viewport?.width ?? (viewportRoot.clientWidth || innerWidth),
+      contentHeight: viewport?.height ?? (viewportRoot.clientHeight || innerHeight),
       documentWidth: Math.max(
         scroller.scrollWidth,
         body?.scrollWidth ?? 0,
@@ -56,9 +57,9 @@ export class CapturePage {
       scrollX,
       scrollY,
       devicePixelRatio,
-      visualScale: window.visualViewport?.scale ?? 1,
-      visualOffsetX: window.visualViewport?.offsetLeft ?? 0,
-      visualOffsetY: window.visualViewport?.offsetTop ?? 0,
+      visualScale: viewport?.scale ?? 1,
+      visualOffsetX: viewport?.offsetLeft ?? 0,
+      visualOffsetY: viewport?.offsetTop ?? 0,
     };
   }
 
