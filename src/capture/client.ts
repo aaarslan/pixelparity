@@ -2,9 +2,11 @@ import {
   assertCaptureState,
   CAPTURE_INTERVAL_MS,
   CAPTURE_PORT,
+  type CaptureBitmapDimensions,
   type CaptureOptions,
   type CaptureRect,
   type CaptureResult,
+  captureBitmapScale,
   captureDimensions,
   clipCaptureRegion,
   isCapturePageState,
@@ -175,7 +177,7 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
     const tiles = fullPage
       ? planFullCapture(initial)
       : [{ scrollX: initial.scrollX, scrollY: initial.scrollY, area: outputArea }];
-    let scale = 0;
+    let firstBitmap: CaptureBitmapDimensions | undefined;
     let completed = 0;
     let extentChanged = false;
     for (const tile of tiles) {
@@ -238,30 +240,33 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
       const bitmap = await createImageBitmap(pngDataUrlToBlob(dataUrl));
       try {
         throwIfAborted(signal);
-        const tileScale = bitmap.width / initial.viewportWidth;
-        if (
-          Math.abs(bitmap.height - initial.viewportHeight * tileScale) > 2 ||
-          (scale && Math.abs(scale - tileScale) > 0.001)
-        ) {
-          throw new Error(
-            "Screenshot dimensions changed during capture. Keep the viewport fixed and retry.",
-          );
-        }
+        const scale = captureBitmapScale(initial, bitmap, firstBitmap);
         if (!canvas) {
-          scale = tileScale;
-          const dimensions = captureDimensions(outputArea.width, outputArea.height, scale);
+          firstBitmap = { width: bitmap.width, height: bitmap.height };
+          const dimensions = captureDimensions(
+            outputArea.width,
+            outputArea.height,
+            scale.x,
+            scale.y,
+          );
           canvas = new OffscreenCanvas(dimensions.width, dimensions.height);
         }
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Chrome could not create the screenshot canvas.");
         if (fullPage) {
-          const draw = tileDrawPlan(tile.area, after.scrollX, after.scrollY, scale);
+          const draw = tileDrawPlan(
+            tile.area,
+            after.scrollX,
+            after.scrollY,
+            scale.x,
+            scale.y,
+          );
           const { source, destination } = draw;
           if (
             source.x < 0 ||
             source.y < 0 ||
-            source.x + source.width > bitmap.width ||
-            source.y + source.height > bitmap.height
+            source.x + source.width > bitmap.width + 1e-7 ||
+            source.y + source.height > bitmap.height + 1e-7
           ) {
             throw new Error(
               "The page changed its layout during capture. Retry after it finishes loading.",
@@ -281,10 +286,10 @@ async function captureLocked(run: CaptureRun): Promise<CaptureResult> {
         } else {
           context.drawImage(
             bitmap,
-            outputArea.x * scale,
-            outputArea.y * scale,
-            outputArea.width * scale,
-            outputArea.height * scale,
+            outputArea.x * scale.x,
+            outputArea.y * scale.y,
+            outputArea.width * scale.x,
+            outputArea.height * scale.y,
             0,
             0,
             canvas.width,

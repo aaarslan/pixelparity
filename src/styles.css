@@ -1,7 +1,7 @@
+@layer reset, theme, base, components, utilities;
+
 @import "./overlay/overlay-tools.css";
 @import "./capture/capture.css";
-
-@layer reset, theme, base, components, utilities;
 
 @layer theme {
   :root {

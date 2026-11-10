@@ -31,6 +31,13 @@ All notable PixelParity changes are documented here.
 - Updated vulnerable development dependencies and refreshed compatible transitive
   packages; renamed the local audit command to `npm run audit`
 
+### Fixed
+
+- Preserve in-progress numeric input and commit grid values on blur or Enter
+- Establish cascade layer priority before importing tool styles
+- Account for independent bitmap rounding at fractional capture scales
+- Initialize capture on ordinary HTTP pages without secure-context-only UUID APIs
+
 Release qualification, store submission, and publication remain tracked in
 [the release checklist](store/release-checklist.md).
 

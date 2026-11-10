@@ -6,6 +6,7 @@ import { CapturePage } from "../../src/capture/page";
 import {
   assertCaptureState,
   type CapturePageState,
+  captureBitmapScale,
   captureDimensions,
   clipCaptureRegion,
   isCapturePageState,
@@ -64,6 +65,9 @@ describe("capture geometry and limits", () => {
     expect(() => captureDimensions(100, 16_381, 2)).toThrow("32,760");
     expect(() => captureDimensions(Number.POSITIVE_INFINITY, 100, 1)).toThrow("invalid");
     expect(() => captureDimensions(100, 100, 0)).toThrow("invalid");
+    expect(() => captureDimensions(8000, 6000, 1, 6001 / 6000)).toThrow("48 megapixel");
+    expect(() => captureDimensions(100, 16_381, 1, 2)).toThrow("32,760");
+    expect(() => captureDimensions(100, 100, 1, 0)).toThrow("invalid");
   });
 
   it("plans the final clamped tile without duplicating the overlap band", () => {
@@ -105,6 +109,142 @@ describe("capture geometry and limits", () => {
     const bottom = tileDrawPlan({ x: 0, y: 501, width: 803, height: 213 }, 0, 213, 1.25);
     expect(top.destination.y + top.destination.height).toBe(bottom.destination.y);
     expect(bottom.destination.y + bottom.destination.height).toBe(Math.round(714 * 1.25));
+  });
+
+  it.each([
+    { viewportWidth: 803, viewportHeight: 901, width: 1004, height: 1126 },
+    { viewportWidth: 901, viewportHeight: 803, width: 1126, height: 1004 },
+  ])(
+    "fits independently rounded bitmap axes for $viewportWidth × $viewportHeight CSS pixels",
+    ({ viewportWidth, viewportHeight, width, height }) => {
+      const bitmap = { width, height };
+      const viewport = { viewportWidth, viewportHeight };
+      const { x: scaleX, y: scaleY } = captureBitmapScale(viewport, bitmap);
+      expect(captureBitmapScale(viewport, bitmap, bitmap)).toEqual({
+        x: scaleX,
+        y: scaleY,
+      });
+      const draw = tileDrawPlan(
+        { x: 0, y: 0, width: viewportWidth, height: viewportHeight },
+        0,
+        0,
+        scaleX,
+        scaleY,
+      );
+      expect(captureDimensions(viewportWidth, viewportHeight, scaleX, scaleY)).toEqual({
+        width,
+        height,
+      });
+      expect(draw.source.x).toBe(0);
+      expect(draw.source.y).toBe(0);
+      expect(draw.source.width).toBeCloseTo(width, 10);
+      expect(draw.source.height).toBeCloseTo(height, 10);
+      expect(draw.destination).toEqual({ x: 0, y: 0, width, height });
+    },
+  );
+
+  it.each([
+    { devicePixelRatio: 0.8, finalWidth: 137, finalHeight: 219, scrollbar: 0 },
+    { devicePixelRatio: 1.1, finalWidth: 137, finalHeight: 219, scrollbar: 15 },
+    { devicePixelRatio: 1.25, finalWidth: 137, finalHeight: 219, scrollbar: 0 },
+    { devicePixelRatio: 1.5, finalWidth: 137, finalHeight: 219, scrollbar: 15 },
+    { devicePixelRatio: 0.8, finalWidth: 1, finalHeight: 1, scrollbar: 0 },
+  ])(
+    "covers clamped final tiles at $devicePixelRatio DPR with a $finalWidth × $finalHeight final band",
+    ({ devicePixelRatio, finalWidth, finalHeight, scrollbar }) => {
+      const viewportWidth = 803;
+      const viewportHeight = 901;
+      const contentWidth = viewportWidth - scrollbar;
+      const contentHeight = viewportHeight - scrollbar;
+      const page = {
+        ...state,
+        viewportWidth,
+        viewportHeight,
+        contentWidth,
+        contentHeight,
+        documentWidth: contentWidth * 2 + finalWidth,
+        documentHeight: contentHeight * 2 + finalHeight,
+        devicePixelRatio,
+      };
+      const bitmap = {
+        width: Math.round(viewportWidth * devicePixelRatio),
+        height: Math.round(viewportHeight * devicePixelRatio),
+      };
+      const scale = captureBitmapScale(page, bitmap);
+      const dimensions = captureDimensions(
+        page.documentWidth,
+        page.documentHeight,
+        scale.x,
+        scale.y,
+      );
+      const tiles = planFullCapture(page);
+      const draws = tiles.map((tile) =>
+        tileDrawPlan(tile.area, tile.scrollX, tile.scrollY, scale.x, scale.y),
+      );
+      expect(draws).toHaveLength(9);
+      for (const [index, draw] of draws.entries()) {
+        expect(draw.source.x).toBeGreaterThanOrEqual(0);
+        expect(draw.source.y).toBeGreaterThanOrEqual(0);
+        expect(draw.source.width).toBeGreaterThan(0);
+        expect(draw.source.height).toBeGreaterThan(0);
+        expect(draw.source.x + draw.source.width).toBeLessThanOrEqual(bitmap.width + 1e-7);
+        expect(draw.source.y + draw.source.height).toBeLessThanOrEqual(
+          bitmap.height + 1e-7,
+        );
+        expect(draw.destination.width).toBeGreaterThanOrEqual(0);
+        expect(draw.destination.height).toBeGreaterThanOrEqual(0);
+        const previousColumn = index % 3 ? draws[index - 1]?.destination : undefined;
+        const previousRow = index >= 3 ? draws[index - 3]?.destination : undefined;
+        expect(draw.destination.x).toBe(
+          previousColumn ? previousColumn.x + previousColumn.width : 0,
+        );
+        expect(draw.destination.y).toBe(
+          previousRow ? previousRow.y + previousRow.height : 0,
+        );
+      }
+      const last = draws.at(-1);
+      if (!last) throw new Error("Missing final tile");
+      expect(last.source.x).toBeGreaterThan(0);
+      expect(last.source.y).toBeGreaterThan(0);
+      expect(last.destination.x + last.destination.width).toBe(dimensions.width);
+      expect(last.destination.y + last.destination.height).toBe(dimensions.height);
+      expect(
+        draws.reduce(
+          (total, draw) => total + draw.destination.width * draw.destination.height,
+          0,
+        ),
+      ).toBe(dimensions.width * dimensions.height);
+    },
+  );
+
+  it("rejects any bitmap dimension change after the first frame", () => {
+    const viewport = { viewportWidth: 803, viewportHeight: 901 };
+    const first = { width: 1004, height: 1126 };
+    for (const bitmap of [
+      { width: 1003, height: 1126 },
+      { width: 1005, height: 1126 },
+      { width: 1004, height: 1125 },
+      { width: 1004, height: 1127 },
+      { width: 1606, height: 1802 },
+    ]) {
+      expect(() => captureBitmapScale(viewport, bitmap, first)).toThrow(
+        "Screenshot dimensions changed",
+      );
+    }
+  });
+
+  it("rejects bitmap axes that cannot describe one rounded viewport scale", () => {
+    const viewport = { viewportWidth: 803, viewportHeight: 901 };
+    for (const bitmap of [
+      { width: 1004, height: 1130 },
+      { width: 1008, height: 1126 },
+      { width: 0, height: 1126 },
+      { width: 1004, height: Number.NaN },
+    ]) {
+      expect(() => captureBitmapScale(viewport, bitmap)).toThrow(
+        "Screenshot dimensions changed",
+      );
+    }
   });
 
   it("bounds the initial document extent without chasing an infinite feed", () => {

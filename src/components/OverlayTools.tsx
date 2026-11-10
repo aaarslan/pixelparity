@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { connectOverlay, type OverlayConnection } from "../overlay/client";
 import {
   DEFAULT_OVERLAY_SETTINGS,
@@ -60,6 +60,28 @@ function NumberField({
   disabled: boolean;
   onChange: (value: number) => void;
 }) {
+  const [draft, setDraft] = useState(String(value));
+
+  useLayoutEffect(() => {
+    setDraft(String(value));
+  }, [value, disabled]);
+
+  const reset = (input: HTMLInputElement) => {
+    input.value = String(value);
+    setDraft(String(value));
+  };
+
+  const commit = (input: HTMLInputElement) => {
+    if (disabled || input.disabled || !Number.isFinite(input.valueAsNumber)) {
+      reset(input);
+      return;
+    }
+    const next = Math.min(max, Math.max(min, Math.round(input.valueAsNumber)));
+    input.value = String(next);
+    setDraft(String(next));
+    if (next !== value) onChange(next);
+  };
+
   return (
     <label class="field-label layout-number-field">
       <span>{label}</span>
@@ -69,15 +91,22 @@ function NumberField({
           min={min}
           max={max}
           step="1"
-          value={value}
+          value={draft}
           disabled={disabled}
           onInput={(event) => {
-            const next = event.currentTarget.valueAsNumber;
-            if (Number.isFinite(next))
-              onChange(Math.min(max, Math.max(min, Math.round(next))));
+            if (!disabled && !event.currentTarget.disabled)
+              setDraft(event.currentTarget.value);
           }}
-          onBlur={(event) => {
-            event.currentTarget.value = String(value);
+          onBlur={(event) => commit(event.currentTarget)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.isComposing) {
+              event.preventDefault();
+              commit(event.currentTarget);
+            } else if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              reset(event.currentTarget);
+            }
           }}
         />
         {unit && (

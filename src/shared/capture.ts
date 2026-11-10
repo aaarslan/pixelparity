@@ -41,6 +41,11 @@ export interface CaptureTile {
   area: CaptureRect;
 }
 
+export interface CaptureBitmapDimensions {
+  width: number;
+  height: number;
+}
+
 export interface CaptureResult {
   blob: Blob;
   width: number;
@@ -132,12 +137,17 @@ export function clipCaptureRegion(
   return { x, y, width: right - x, height: bottom - y };
 }
 
-export function captureDimensions(width: number, height: number, scale: number) {
-  if (![width, height, scale].every((value) => finite(value) && value > 0)) {
+export function captureDimensions(
+  width: number,
+  height: number,
+  scaleX: number,
+  scaleY = scaleX,
+) {
+  if (![width, height, scaleX, scaleY].every((value) => finite(value) && value > 0)) {
     throw new Error("The page has invalid capture dimensions.");
   }
-  const pixelWidth = Math.round(width * scale);
-  const pixelHeight = Math.round(height * scale);
+  const pixelWidth = Math.round(width * scaleX);
+  const pixelHeight = Math.round(height * scaleY);
   if (
     pixelWidth < 1 ||
     pixelHeight < 1 ||
@@ -180,22 +190,58 @@ export function planFullCapture(state: CapturePageState): CaptureTile[] {
   return tiles;
 }
 
+export function captureBitmapScale(
+  viewport: Pick<CapturePageState, "viewportWidth" | "viewportHeight">,
+  bitmap: CaptureBitmapDimensions,
+  previous?: CaptureBitmapDimensions,
+) {
+  const minimumScale = Math.max(
+    (bitmap.width - 1) / viewport.viewportWidth,
+    (bitmap.height - 1) / viewport.viewportHeight,
+  );
+  const maximumScale = Math.min(
+    (bitmap.width + 1) / viewport.viewportWidth,
+    (bitmap.height + 1) / viewport.viewportHeight,
+  );
+  if (
+    !finite(viewport.viewportWidth) ||
+    viewport.viewportWidth <= 0 ||
+    !finite(viewport.viewportHeight) ||
+    viewport.viewportHeight <= 0 ||
+    !Number.isSafeInteger(bitmap.width) ||
+    bitmap.width < 1 ||
+    !Number.isSafeInteger(bitmap.height) ||
+    bitmap.height < 1 ||
+    minimumScale >= maximumScale ||
+    (previous && (bitmap.width !== previous.width || bitmap.height !== previous.height))
+  ) {
+    throw new Error(
+      "Screenshot dimensions changed during capture. Keep the viewport fixed and retry.",
+    );
+  }
+  return {
+    x: bitmap.width / viewport.viewportWidth,
+    y: bitmap.height / viewport.viewportHeight,
+  };
+}
+
 export function tileDrawPlan(
   area: CaptureRect,
   scrollX: number,
   scrollY: number,
-  scale: number,
+  scaleX: number,
+  scaleY = scaleX,
 ) {
-  const destinationX = Math.round(area.x * scale);
-  const destinationY = Math.round(area.y * scale);
-  const width = Math.round((area.x + area.width) * scale) - destinationX;
-  const height = Math.round((area.y + area.height) * scale) - destinationY;
+  const destinationX = Math.round(area.x * scaleX);
+  const destinationY = Math.round(area.y * scaleY);
+  const width = Math.round((area.x + area.width) * scaleX) - destinationX;
+  const height = Math.round((area.y + area.height) * scaleY) - destinationY;
   return {
     source: {
-      x: Math.round((area.x - scrollX) * scale),
-      y: Math.round((area.y - scrollY) * scale),
-      width,
-      height,
+      x: (area.x - scrollX) * scaleX,
+      y: (area.y - scrollY) * scaleY,
+      width: area.width * scaleX,
+      height: area.height * scaleY,
     },
     destination: { x: destinationX, y: destinationY, width, height },
   };

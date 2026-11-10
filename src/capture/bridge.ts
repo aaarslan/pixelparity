@@ -10,7 +10,9 @@ import { selectCaptureRegion } from "./selection";
 type CaptureGlobal = typeof globalThis & { __PIXELPARITY_CAPTURE_V3__?: true };
 
 function installCaptureBridge(): void {
-  const documentToken = crypto.randomUUID();
+  const documentToken = Array.from(crypto.getRandomValues(new Uint8Array(16)), (value) =>
+    value.toString(16).padStart(2, "0"),
+  ).join("");
   let activePort: chrome.runtime.Port | null = null;
   chrome.runtime.onConnect.addListener((port) => {
     if (port.name !== CAPTURE_PORT || port.sender?.id !== chrome.runtime.id) return;
@@ -122,6 +124,6 @@ function installCaptureBridge(): void {
 
 const captureGlobal = globalThis as CaptureGlobal;
 if (!captureGlobal.__PIXELPARITY_CAPTURE_V3__) {
-  captureGlobal.__PIXELPARITY_CAPTURE_V3__ = true;
   installCaptureBridge();
+  captureGlobal.__PIXELPARITY_CAPTURE_V3__ = true;
 }

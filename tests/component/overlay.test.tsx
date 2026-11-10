@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from "@testing-library/preact";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -65,6 +65,138 @@ describe("layout tools", () => {
     await user.click(screen.getByRole("button", { name: "Clear all" }));
     expect(send).toHaveBeenLastCalledWith({ type: "PIXELPARITY/OVERLAY_CLEAR" });
     expect(toggle).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("preserves a multi-digit spacing draft and commits it on blur", async () => {
+    const user = userEvent.setup();
+    render(<OverlayTools tabId={42} enabled />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "8 px grid" })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: "8 px grid" }));
+    send.mockClear();
+    const spacing = screen.getByRole("spinbutton", { name: "Grid spacing" });
+    await user.clear(spacing);
+    await user.type(spacing, "16");
+    expect(spacing).toHaveValue(16);
+    expect(send).not.toHaveBeenCalled();
+    await user.tab();
+    expect(send).toHaveBeenCalledOnce();
+    expect(send).toHaveBeenLastCalledWith({
+      type: "PIXELPARITY/OVERLAY_SET",
+      settings: {
+        ...DEFAULT_OVERLAY_SETTINGS,
+        gridEnabled: true,
+        gridType: "square",
+        spacing: 16,
+      },
+    });
+  });
+
+  it("clamps spacing only when committed with Enter and does not commit again on blur", async () => {
+    const user = userEvent.setup();
+    render(<OverlayTools tabId={42} enabled />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "8 px grid" })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: "8 px grid" }));
+    send.mockClear();
+    const spacing = screen.getByRole("spinbutton", { name: "Grid spacing" });
+    await user.clear(spacing);
+    await user.type(spacing, "999");
+    expect(spacing).toHaveValue(999);
+    expect(send).not.toHaveBeenCalled();
+    await user.keyboard("{Enter}");
+    expect(spacing).toHaveValue(128);
+    expect(send).toHaveBeenCalledOnce();
+    expect(send).toHaveBeenLastCalledWith(
+      expect.objectContaining({ settings: expect.objectContaining({ spacing: 128 }) }),
+    );
+    await user.tab();
+    expect(send).toHaveBeenCalledOnce();
+    await user.clear(spacing);
+    await user.type(spacing, "1");
+    expect(spacing).toHaveValue(1);
+    await user.keyboard("{Enter}");
+    expect(spacing).toHaveValue(2);
+    expect(send).toHaveBeenLastCalledWith(
+      expect.objectContaining({ settings: expect.objectContaining({ spacing: 2 }) }),
+    );
+  });
+
+  it("restores the committed spacing after Escape, an empty draft, or invalid input", async () => {
+    const user = userEvent.setup();
+    render(<OverlayTools tabId={42} enabled />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "8 px grid" })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: "8 px grid" }));
+    send.mockClear();
+    const spacing = screen.getByRole("spinbutton", { name: "Grid spacing" });
+    await user.clear(spacing);
+    await user.type(spacing, "16");
+    await user.keyboard("{Escape}");
+    expect(spacing).toHaveValue(8);
+    await user.clear(spacing);
+    await user.tab();
+    expect(spacing).toHaveValue(8);
+    await user.clear(spacing);
+    await user.type(spacing, "e");
+    await user.tab();
+    expect(spacing).toHaveValue(8);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("resynchronizes numeric drafts when a preset or page state changes", async () => {
+    const user = userEvent.setup();
+    render(<OverlayTools tabId={42} enabled />);
+    const preset = screen.getByRole("button", { name: "8 px grid" });
+    await waitFor(() => expect(preset).toBeEnabled());
+    await user.click(preset);
+    const spacing = screen.getByRole("spinbutton", { name: "Grid spacing" });
+    await user.clear(spacing);
+    await user.type(spacing, "16");
+    await user.click(preset);
+    expect(spacing).toHaveValue(8);
+    send.mockClear();
+    await user.clear(spacing);
+    await user.type(spacing, "24");
+    const onEvent = vi.mocked(connectOverlay).mock.calls.at(-1)?.[1];
+    await act(() =>
+      onEvent?.({
+        type: "PIXELPARITY/OVERLAY_STATE",
+        settings: {
+          ...DEFAULT_OVERLAY_SETTINGS,
+          gridEnabled: true,
+          gridType: "square",
+          spacing: 32,
+        },
+      }),
+    );
+    expect(spacing).toHaveValue(32);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it("discards an unfinished numeric draft when capture disables its field", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<OverlayTools tabId={42} enabled />);
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "8 px grid" })).toBeEnabled(),
+    );
+    await user.click(screen.getByRole("button", { name: "8 px grid" }));
+    send.mockClear();
+    const spacing = screen.getByRole("spinbutton", { name: "Grid spacing" });
+    await user.clear(spacing);
+    await user.type(spacing, "16");
+    rerender(<OverlayTools tabId={42} enabled locked />);
+    expect(spacing).toBeDisabled();
+    expect(spacing).toHaveValue(8);
+    fireEvent.blur(spacing);
+    fireEvent.keyDown(spacing, { key: "Enter" });
+    expect(send).not.toHaveBeenCalled();
+    rerender(<OverlayTools tabId={42} enabled />);
+    expect(spacing).toBeEnabled();
+    expect(spacing).toHaveValue(8);
   });
 
   it("releases its page connection when disabled or unmounted", async () => {

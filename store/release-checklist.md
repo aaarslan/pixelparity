@@ -5,12 +5,12 @@
 | Item | Status |
 | --- | --- |
 | Version and title | 3.0.0 · PixelParity — Layout, Grid & Capture |
-| Local code and package checks | **Passed:** formatting, lint, strict types, 90 tests, production build, archive checks, dependency audit |
+| Local code and package checks | **Passed:** formatting, lint, strict types, 106 tests, production build, archive checks, dependency audit |
 | Installed-Chrome qualification and visual review | **Blocked in this environment; pending on a machine that can run Chrome extensions** |
-| Candidate ZIP | **Built:** 64,034 bytes; 14 runtime files; reproducible |
+| Candidate ZIP | **Built:** 64,358 bytes; 14 runtime files; reproducible |
 | Promotional artwork | **Complete:** 440×280 and 1400×560 RGB PNGs, visually reviewed |
 | Five v3 product screenshots | **Pending:** installed-extension generator is ready but has not run |
-| GitHub source | Review branch `feature/pixelparity-3-layout-capture`; draft PR required until runtime qualification passes |
+| GitHub source | PR #4 on `feature/pixelparity-3-layout-capture`; runtime qualification remains required before release |
 | Public privacy policy on `main` | **Pending merge:** v3 policy is included on the review branch |
 | Developer-dashboard updates | **Blocked:** connected browser reports “The extensions gallery cannot be scripted.” |
 | Chrome Web Store submission | **Not submitted** |
@@ -25,8 +25,11 @@ started at 2.1.0. No production store package or listing was changed.
 - [x] `npm run check` passed with the final production source.
 - [x] Formatting and lint completed without findings.
 - [x] Strict TypeScript checking passed.
-- [x] 90 unit/component tests passed across 12 files, including structural accessibility
+- [x] 106 unit/component tests passed across 13 files, including structural accessibility
   checks. Browser color contrast and rendered layouts remain unverified.
+- [x] PR #4 regression checks passed for numeric editing, fractional bitmap scaling,
+  and HTTP-compatible capture initialization. The bundled CSS establishes cascade
+  layer order before component styles.
 - [x] Production build and runtime allowlist verification passed.
 - [x] `npm audit --audit-level=high` reported **0 vulnerabilities** at all severities.
 - [x] Consecutive `node scripts/pack.mjs` runs produced identical bytes.
@@ -41,10 +44,10 @@ started at 2.1.0. No production store package or listing was changed.
 | Evidence | Value |
 | --- | --- |
 | Package | `builds/pixelparity-3.0.0.zip` |
-| SHA-256 | `a1b5022ea869387b2e4f89d8bcf28d007426f3005da1005c17a27dd8a73b5594` |
-| Archive size | 64,034 bytes |
-| Uncompressed runtime | 186,453 bytes across 14 files |
-| Source commit | Recorded by the draft PR and the downloadable release kit's `release-manifest.json` |
+| SHA-256 | `4e087cf9dfc8cce3c94933ca1a395d4070e37fd684134be2b27d29bbdb50ca21` |
+| Archive size | 64,358 bytes |
+| Uncompressed runtime | 187,423 bytes across 14 files |
+| Source commit | Recorded by PR #4 and the downloadable release kit's `release-manifest.json` |
 | Node | 24.22.1 |
 | OS | Linux x86_64; Debian 13 runtime; glibc 2.41 |
 | Available Chromium | 156.0.8078.79; installed-extension test launch did not complete |
