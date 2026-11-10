@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_PAGE_METRICS } from "../../store/source/demo-data";
 import {
-  MESSAGE_TYPES,
   isBridgeResponse,
   isLiveBridgeMessage,
   isPageMetrics,
+  MESSAGE_TYPES,
 } from "../../src/shared/protocol";
+import { DEMO_PAGE_METRICS } from "../fixtures/metrics";
 
 describe("bridge protocol validation", () => {
   it("accepts only complete, finite metric contracts", () => {

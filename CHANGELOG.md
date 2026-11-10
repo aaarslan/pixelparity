@@ -2,6 +2,49 @@
 
 All notable PixelParity changes are documented here.
 
+## 3.0.0 — Unreleased
+
+### Added
+
+- Layout tools with toggleable column, square, and baseline grids; configurable
+  columns, gutters, margins, maximum width, spacing, color, and opacity
+- CSS-pixel rulers and element inspection for bounds, margin, padding, border, gaps,
+  font size, and line height, with measurement locking and text export
+- Local PNG capture for the viewport, a keyboard-adjustable visible region, and the
+  full main document, with preview, copy, save, and discard
+- Capture options for including guides and handling fixed/sticky elements
+- Serialized capture with cancellation, page-change detection, bounded image/frame
+  sizes, and restoration of temporary page changes
+- Updated store copy, reviewer instructions, and local website-content disclosures
+
+### Changed
+
+- Renamed the extension to PixelParity — Layout, Grid & Capture
+- Expanded the side panel into a focused layout-inspection and documentation toolkit
+- Guarded live updates against stale connections and asynchronous completions
+- Cleared stale measurements and baselines when access or the document changes
+- Avoided rewriting already-migrated preferences whenever a view opens
+- Retained the four existing permissions and network-blocking CSP; allowed only local
+  image data and Blob previews for capture
+- Replaced the archive dependency chain with deterministic packaging using Node's
+  built-in compression and CRC32 support
+- Updated vulnerable development dependencies and refreshed compatible transitive
+  packages; renamed the local audit command to `npm run audit`
+
+### Fixed
+
+- Preserve in-progress numeric input and commit grid values on blur or Enter
+- Establish cascade layer priority before importing tool styles
+- Account for independent bitmap rounding at fractional capture scales
+- Reconcile quantized scroll positions with overlapping capture tiles, canonical device-pixel
+  coordinates, and measured outer edges
+- Initialize capture on ordinary HTTP pages without secure-context-only UUID APIs
+- Give dropdown indicators consistent insets and profile actions clearer spacing
+- Keep long profile names inside narrow panels and native controls in the chosen theme
+
+Release qualification, store submission, and publication remain tracked in
+[the release checklist](store/release-checklist.md).
+
 ## 2.0.0 — 2026-07-18
 
 ### Added
@@ -18,7 +61,7 @@ All notable PixelParity changes are documented here.
 - WCAG-oriented semantic UI, focus restoration, live regions, forced colors, reduced
   motion, and narrow-width reflow
 - Strict TypeScript contracts, Biome, Vitest, Testing Library, axe, Puppeteer E2E,
-  cross-platform CI, reproducible packaging, and dependency audit gates
+  reproducible packaging, and dependency audit gates
 - Five current store screenshots, two promo images, listing copy, reviewer notes, and a
   captioned demo video
 

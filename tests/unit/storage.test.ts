@@ -14,6 +14,7 @@ class MemoryStorage implements StorageAreaAdapter {
   values: Record<string, unknown>;
   reads: string[][] = [];
   removals: string[][] = [];
+  writes: Record<string, unknown>[] = [];
 
   constructor(initial: Record<string, unknown> = {}) {
     this.values = { ...initial };
@@ -25,6 +26,7 @@ class MemoryStorage implements StorageAreaAdapter {
   }
 
   async set(items: Record<string, unknown>) {
+    this.writes.push(items);
     Object.assign(this.values, items);
   }
 
@@ -57,6 +59,7 @@ describe("v1 preference migration", () => {
     const local = new MemoryStorage();
     expect(await migratePreferences(sync, local)).toEqual(expected);
     expect(await migratePreferences(sync, local)).toEqual(expected);
+    expect(sync.writes).toHaveLength(1);
   });
 
   it("shards the maximum profile set below Chrome Sync's per-item quota", async () => {

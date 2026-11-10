@@ -38,6 +38,17 @@ async function buildJavaScript() {
       outfile: path.join(dist, "bridge.js"),
       format: "iife",
     }),
+    ...[
+      ["src/overlay/index.ts", "overlay.js"],
+      ["src/capture/bridge.ts", "capture-bridge.js"],
+    ].map(([entry, output]) =>
+      esbuild.build({
+        ...shared,
+        entryPoints: [path.join(root, entry)],
+        outfile: path.join(dist, output),
+        format: "iife",
+      }),
+    ),
   ]);
 }
 
@@ -70,14 +81,22 @@ async function copyRuntimeFiles() {
 }
 
 async function assertBundleBudgets() {
-  const entryFiles = ["popup.js", "sidepanel.js", "bridge.js"];
+  const entryFiles = [
+    "popup.js",
+    "sidepanel.js",
+    "bridge.js",
+    "overlay.js",
+    "capture-bridge.js",
+  ];
   const sizes = await Promise.all(
     entryFiles.map(async (file) => ({
       file,
       bytes: Buffer.byteLength(await readFile(path.join(dist, file))),
     })),
   );
-  const oversized = sizes.filter(({ bytes }) => bytes > 75 * 1024);
+  const oversized = sizes.filter(
+    ({ file, bytes }) => bytes > (file === "sidepanel.js" ? 110 : 75) * 1024,
+  );
   if (oversized.length > 0) {
     throw new Error(
       `JavaScript entry budget exceeded: ${oversized.map(({ file, bytes }) => `${file} (${bytes} bytes)`).join(", ")}`,

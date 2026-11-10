@@ -44,6 +44,103 @@ async function waitForMetric(
   );
 }
 
+async function clickScopedButton(page: Page, scope: string, name: string): Promise<void> {
+  const buttons = await page.$$(`${scope} button`);
+  try {
+    for (const button of buttons) {
+      const matches = await button.evaluate((element, expected) => {
+        const label = element.querySelector("strong")?.textContent ?? element.textContent;
+        return label?.replace(/\s+/g, " ").trim() === expected;
+      }, name);
+      if (matches) {
+        await button.click();
+        return;
+      }
+    }
+    throw new Error(`Could not find ${name} in ${scope}.`);
+  } finally {
+    await Promise.all(buttons.map((button) => button.dispose()));
+  }
+}
+
+async function setCaptureOption(page: Page, name: string, checked: boolean): Promise<void> {
+  const labels = await page.$$(".capture-options label");
+  try {
+    for (const label of labels) {
+      const matches = await label.evaluate(
+        (element, expected) => element.querySelector("strong")?.textContent === expected,
+        name,
+      );
+      if (!matches) continue;
+      const input = await label.$("input");
+      if (!input) throw new Error(`Missing checkbox for ${name}.`);
+      try {
+        if (
+          await input.evaluate((element, desired) => element.checked !== desired, checked)
+        )
+          await input.click();
+      } finally {
+        await input.dispose();
+      }
+      return;
+    }
+    throw new Error(`Could not find capture option ${name}.`);
+  } finally {
+    await Promise.all(labels.map((label) => label.dispose()));
+  }
+}
+
+async function capturePreview(page: Page, mode: string) {
+  const previousSource = await page.evaluate(
+    () => document.querySelector<HTMLImageElement>(".capture-preview img")?.src ?? "",
+  );
+  await clickScopedButton(page, ".capture-modes", mode);
+  await page.waitForFunction(
+    (previous) => {
+      const image = document.querySelector<HTMLImageElement>(".capture-preview img");
+      return (
+        document.querySelector(".capture-message--error") ||
+        (image &&
+          image.src !== previous &&
+          image.complete &&
+          image.naturalWidth > 0 &&
+          !document.querySelector(".capture-progress"))
+      );
+    },
+    { timeout: 15_000 },
+    previousSource,
+  );
+  const failure = await page.$(".capture-message--error");
+  if (failure)
+    throw new Error(
+      await failure.evaluate((element) => element.textContent ?? "Capture failed."),
+    );
+  return page.$eval(".capture-preview img", (element) => {
+    const image = element as HTMLImageElement;
+    return {
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      declaredWidth: Number(image.getAttribute("width")),
+      declaredHeight: Number(image.getAttribute("height")),
+    };
+  });
+}
+
+async function screenshotPixel(page: Page, x: number, y: number): Promise<number[]> {
+  return page.$eval(
+    ".capture-preview img",
+    (element, point) => {
+      const image = element as HTMLImageElement;
+      const canvas = new OffscreenCanvas(1, 1);
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("A canvas was not available for PNG verification.");
+      context.drawImage(image, Math.floor(point.x), Math.floor(point.y), 1, 1, 0, 0, 1, 1);
+      return Array.from(context.getImageData(0, 0, 1, 1).data);
+    },
+    { x, y },
+  );
+}
+
 beforeAll(async () => {
   const fixtures = new Map([
     ["/", await readFile(path.join(root, "tests/fixtures/index.html"))],
@@ -69,9 +166,6 @@ beforeAll(async () => {
   browser = await puppeteer.launch({
     executablePath,
     headless: process.env.PIXELPARITY_HEADLESS === "1",
-    // Chrome 137+ no longer supports loading unpacked extensions through
-    // command-line flags. Enable Puppeteer's extension protocol, then install
-    // the built package below through its supported runtime API.
     enableExtensions: true,
     defaultViewport: { width: 1100, height: 760 },
     args: ["--no-first-run", "--no-default-browser-check", "--disable-component-update"],
@@ -79,7 +173,7 @@ beforeAll(async () => {
   fixturePage = await browser.newPage();
   const extensionId = await browser.installExtension(path.join(root, "dist"));
   const installed = (await browser.extensions()).get(extensionId);
-  if (!installed) throw new Error("PixelParity 2.0.0 was not installed.");
+  if (!installed) throw new Error("PixelParity was not installed.");
   extension = installed;
   await fixturePage.setViewport({ width: 1000, height: 700, deviceScaleFactor: 1 });
   await fixturePage.goto(fixtureUrl, { waitUntil: "domcontentloaded" });
@@ -222,7 +316,7 @@ describe("packaged extension", () => {
     await panel.waitForSelector(".connection-pill--live", { timeout: 10_000 });
     await otherTab.close();
 
-    await panel.click(".panel-nav button:nth-child(2)");
+    await panel.click('.panel-nav button[data-section="breakpoints"]');
     await panel.waitForSelector(".panel-card");
     await panel.evaluate(() => {
       const button = [...document.querySelectorAll<HTMLButtonElement>("button")].find(
@@ -251,7 +345,7 @@ describe("packaged extension", () => {
     expect(storedPreferences.customProfilesLength).toBe(1);
     expect(storedPreferences.storageLayout).toBe("profile-slots-v1");
 
-    await panel.click(".panel-nav button:nth-child(3)");
+    await panel.click('.panel-nav button[data-section="export"]');
     await panel.waitForSelector(".export-card");
     await panel.waitForSelector(".issue-report-card");
     await panel.click(".issue-report-card .button");
@@ -304,11 +398,10 @@ describe("packaged extension", () => {
 
     await fixturePage.goto("data:text/html,<title>New origin</title><h1>Navigation</h1>");
     await panel.waitForSelector(".connection-pill--error", { timeout: 10_000 });
-    await panel.click(".panel-nav button:nth-child(1)");
-    await panel.waitForSelector(".reconnect-banner", { timeout: 10_000 });
-    expect(
-      await panel.$eval(".baseline-card strong", (element) => element.textContent),
-    ).toBe("Capture a baseline");
+    await panel.click('.panel-nav button[data-section="inspect"]');
+    await panel.waitForSelector(".state-view--error", { timeout: 10_000 });
+    expect(await panel.$('[data-metric="layout-viewport"]')).toBeNull();
+    expect(await panel.$(".baseline-card")).toBeNull();
     expect(remoteRequests).toEqual([]);
 
     const protectedPage = await browser.newPage();
@@ -327,4 +420,233 @@ describe("packaged extension", () => {
     ).toBe("This page is protected");
     await protectedPage.close();
   });
+
+  it("aligns and measures the page, captures local PNGs, and restores cancelled captures", async () => {
+    const toolsPage = await browser.newPage();
+    await toolsPage.setViewport(null);
+    const windowSession = await toolsPage.createCDPSession();
+    const { windowId } = await windowSession.send("Browser.getWindowForTarget");
+    await windowSession.send("Browser.setWindowBounds", {
+      windowId,
+      bounds: { width: 1000, height: 850 },
+    });
+    await windowSession.detach();
+    await toolsPage.goto(fixtureUrl, { waitUntil: "domcontentloaded" });
+    const popupTarget = browser.waitForTarget(
+      (target) =>
+        target.url().startsWith("chrome-extension://") &&
+        target.url().includes("popup.html"),
+      { timeout: 10_000 },
+    );
+    try {
+      await toolsPage.triggerExtensionAction(extension);
+      const popup = await extensionPage(await popupTarget);
+      await popup.waitForSelector('[data-metric="layout-viewport"]');
+      const tabId = await popup.evaluate(async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (typeof tab?.id !== "number") throw new Error("No active fixture tab.");
+        return tab.id;
+      });
+      const panelTarget = browser.waitForTarget(
+        (target) => target.url().includes(`sidepanel.html?tabId=${tabId}`),
+        { timeout: 10_000 },
+      );
+      await popup.click(".button--primary");
+      const panel = await extensionPage(await panelTarget);
+      const remoteRequests: string[] = [];
+      panel.on("request", (request) => {
+        if (/^https?:/i.test(request.url())) remoteRequests.push(request.url());
+      });
+      await panel.waitForSelector(".connection-pill--live", { timeout: 10_000 });
+      await panel.evaluate(
+        async (sourceTabId) => chrome.tabs.setZoom(sourceTabId, 1),
+        tabId,
+      );
+      await waitForMetric(panel, "browser-zoom", /^100\s*%$/);
+      const gridSwitch = '.layout-tools [role="switch"][aria-label="Show grid overlay"]';
+      const rulerSwitch = '.layout-tools [role="switch"][aria-label="Show page rulers"]';
+      const inspectButton = ".layout-picker-card button";
+      const overlaySelector = "[data-pixelparity-overlay]";
+
+      const initialGeometry = await toolsPage.$eval(".fixture-card", (element) => {
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      });
+      await panel.click('.panel-nav button[data-section="layout"]');
+      await panel.waitForSelector(`${gridSwitch}:not(:disabled)`, { timeout: 5_000 });
+      expect(await toolsPage.$(overlaySelector)).toBeNull();
+      await panel.click(gridSwitch);
+      await toolsPage.waitForSelector(overlaySelector, { timeout: 5_000 });
+      expect(
+        await toolsPage.$eval(overlaySelector, (element) => element.shadowRoot),
+      ).toBeNull();
+      const overlayGeometry = await toolsPage.$eval(".fixture-card", (element) => {
+        const rect = element.getBoundingClientRect();
+        return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      });
+      expect(overlayGeometry).toEqual(initialGeometry);
+      await panel.click(rulerSwitch);
+      await panel.waitForSelector(`${rulerSwitch}[aria-checked="true"]`);
+
+      await panel.click(inspectButton);
+      await toolsPage.mouse.move(initialGeometry.x + 16, initialGeometry.y + 16);
+      await toolsPage.mouse.click(initialGeometry.x + 16, initialGeometry.y + 16);
+      await panel.waitForFunction(
+        () =>
+          document.querySelector(".layout-measurement .eyebrow")?.textContent ===
+          "Locked element",
+        { timeout: 5_000 },
+      );
+      expect(
+        await panel.$eval("#layout-measurement-title", (element) => element.textContent),
+      ).toBe("<section>");
+      const measuredBounds = await panel.$$eval(".layout-bounds strong", (elements) =>
+        elements.map((element) => Number(element.textContent)),
+      );
+      expect(measuredBounds[0]).toBeCloseTo(initialGeometry.width, 0);
+      expect(measuredBounds[1]).toBeCloseTo(initialGeometry.height, 0);
+      await toolsPage.keyboard.press("Escape");
+      await panel.waitForSelector(`${inspectButton}[aria-pressed="false"]`);
+      expect(await toolsPage.$(overlaySelector)).not.toBeNull();
+      await toolsPage.keyboard.press("Escape");
+      await toolsPage.waitForSelector(overlaySelector, { hidden: true, timeout: 5_000 });
+      await panel.waitForSelector(`${gridSwitch}[aria-checked="false"]`);
+      await panel.waitForSelector(`${rulerSwitch}[aria-checked="false"]`);
+
+      await clickScopedButton(panel, ".layout-presets", "8 px grid");
+      await panel.click(rulerSwitch);
+      await toolsPage.waitForSelector(overlaySelector);
+      const overlay = await toolsPage.$(overlaySelector);
+      if (!overlay) throw new Error("Grid overlay did not appear.");
+      await panel.click('.panel-nav button[data-section="capture"]');
+      expect(await overlay.evaluate((element) => element.isConnected)).toBe(true);
+      const captureGeometry = await toolsPage.evaluate(() => {
+        const rect = document.querySelector(".fixture-card")?.getBoundingClientRect();
+        if (!rect) throw new Error("Missing capture fixture.");
+        return {
+          width: innerWidth,
+          height: innerHeight,
+          dpr: devicePixelRatio,
+          sampleX: rect.x + 16,
+          sampleY: Math.ceil((rect.y + 24) / 8) * 8 + 0.5,
+        };
+      });
+      await setCaptureOption(panel, "Include layout overlays", false);
+      const clean = await capturePreview(panel, "Viewport");
+      expect(clean.width).toBe(clean.declaredWidth);
+      expect(clean.height).toBe(clean.declaredHeight);
+      expect(
+        Math.abs(clean.width - Math.round(captureGeometry.width * captureGeometry.dpr)),
+      ).toBeLessThanOrEqual(1);
+      expect(
+        Math.abs(clean.height - Math.round(captureGeometry.height * captureGeometry.dpr)),
+      ).toBeLessThanOrEqual(1);
+      const scale = clean.width / captureGeometry.width;
+      const cleanPixel = await screenshotPixel(
+        panel,
+        captureGeometry.sampleX * scale,
+        captureGeometry.sampleY * scale,
+      );
+      expect(cleanPixel).toEqual([255, 255, 255, 255]);
+      expect(
+        await overlay.evaluate((element) => getComputedStyle(element).visibility),
+      ).toBe("visible");
+
+      await setCaptureOption(panel, "Include layout overlays", true);
+      const annotated = await capturePreview(panel, "Viewport");
+      expect(annotated).toEqual(clean);
+      const gridPixel = await screenshotPixel(
+        panel,
+        captureGeometry.sampleX * scale,
+        captureGeometry.sampleY * scale,
+      );
+      expect(
+        gridPixel.some(
+          (value, index) => Math.abs(value - (cleanPixel[index] ?? value)) > 10,
+        ),
+      ).toBe(true);
+      const rulerPixel = await screenshotPixel(panel, 35 * scale, 5 * scale);
+      expect(rulerPixel.slice(0, 3).every((value) => value < 100)).toBe(true);
+
+      await clickScopedButton(panel, ".capture-modes", "Select region");
+      await toolsPage.waitForSelector('[data-pixelparity-capture="selection"]', {
+        timeout: 5_000,
+      });
+      await toolsPage.keyboard.press("Escape");
+      await toolsPage.waitForSelector("[data-pixelparity-capture]", {
+        hidden: true,
+        timeout: 5_000,
+      });
+      await panel.waitForFunction(
+        () =>
+          document
+            .querySelector(".capture-message")
+            ?.textContent?.includes("Capture cancelled") &&
+          !document.querySelector(".capture-progress"),
+        { timeout: 5_000 },
+      );
+      expect(await overlay.evaluate((element) => element.isConnected)).toBe(true);
+      expect(await panel.$(".capture-result")).toBeNull();
+
+      await setCaptureOption(panel, "Include layout overlays", false);
+      await toolsPage.evaluate(() =>
+        window.scrollTo({ left: 32, top: 200, behavior: "instant" }),
+      );
+      const scrollBaseline = await toolsPage.evaluate(() => ({
+        x: scrollX,
+        y: scrollY,
+        width: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+        height: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+      }));
+      expect(scrollBaseline.x).toBeGreaterThan(0);
+      expect(scrollBaseline.y).toBe(200);
+      const fullPage = await capturePreview(panel, "Full page");
+      expect(fullPage.width).toBe(fullPage.declaredWidth);
+      expect(fullPage.height).toBe(fullPage.declaredHeight);
+      expect(fullPage.width).toBe(Math.round(scrollBaseline.width * scale));
+      expect(fullPage.height).toBe(Math.round(scrollBaseline.height * scale));
+      expect(await toolsPage.evaluate(() => ({ x: scrollX, y: scrollY }))).toEqual({
+        x: scrollBaseline.x,
+        y: scrollBaseline.y,
+      });
+      expect(
+        await overlay.evaluate((element) => getComputedStyle(element).visibility),
+      ).toBe("visible");
+
+      await clickScopedButton(panel, ".capture-modes", "Full page");
+      await panel.waitForFunction(
+        () =>
+          (document.querySelector<HTMLProgressElement>(".capture-progress progress")
+            ?.value ?? 0) >= 1,
+        { timeout: 10_000 },
+      );
+      await panel.click('.panel-nav button[data-section="layout"]');
+      expect(
+        await panel.$eval(gridSwitch, (element) => (element as HTMLButtonElement).disabled),
+      ).toBe(true);
+      expect(await overlay.evaluate((element) => element.isConnected)).toBe(true);
+      await panel.click('.panel-nav button[data-section="capture"]');
+      await clickScopedButton(panel, ".capture-progress", "Cancel");
+      await panel.waitForFunction(
+        () =>
+          document
+            .querySelector(".capture-message")
+            ?.textContent?.includes("Capture cancelled") &&
+          !document.querySelector(".capture-progress"),
+        { timeout: 8_000 },
+      );
+      expect(await panel.$(".capture-result")).toBeNull();
+      expect(await toolsPage.evaluate(() => ({ x: scrollX, y: scrollY }))).toEqual({
+        x: scrollBaseline.x,
+        y: scrollBaseline.y,
+      });
+      expect(
+        await overlay.evaluate((element) => getComputedStyle(element).visibility),
+      ).toBe("visible");
+      expect(remoteRequests).toEqual([]);
+      await overlay.dispose();
+    } finally {
+      await toolsPage.close();
+    }
+  }, 60_000);
 });

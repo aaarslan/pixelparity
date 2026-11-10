@@ -2,27 +2,42 @@
 
 ## Supported versions
 
-Security fixes are provided for the current 2.x release line. Version 1.x is retained
-only as a Chrome Web Store rollback package and is not under active development.
+Security fixes are developed on the default branch and included in the next release.
+Use the latest published Chrome Web Store version. Older versions do not receive
+separate backports.
 
 ## Report a vulnerability
 
-Please do not post a suspected vulnerability in a public issue. Email
-**arslan.abdallah@gmail.com** with:
+Email **arslan.abdallah@gmail.com** privately with:
 
-- A concise description and impact
+- The affected PixelParity and Chrome versions
 - Reproduction steps or a minimal proof of concept
-- Affected PixelParity and Chrome versions
-- Any suggested mitigation
+- The observed impact and any suggested mitigation
 
-You should receive an acknowledgement within five business days. Please allow time to
-confirm and correct the issue before public disclosure. This project does not
-currently operate a paid bug-bounty program.
+Please avoid posting exploitable details in public issues before a fix is available.
+This project does not operate a paid bug-bounty program.
 
 ## Security design
 
-PixelParity uses Manifest V3, temporary `activeTab` access, no host permissions, no
-remote code, no network connections, trusted-context-only storage, an isolated
-dynamically injected bridge, discriminated messages, whitelisted metric fields, and a
-strict extension Content Security Policy. Page-derived strings are rendered as Preact
-text nodes; the project forbids `dangerouslySetInnerHTML`.
+PixelParity uses Manifest V3 and four permissions: `activeTab`, `scripting`, `storage`,
+and `sidePanel`. It has no permanent host permissions, externally connectable entry
+points, remote code, or extension network requests.
+
+Page helpers run in isolated worlds after user invocation. Their message contracts
+are validated; captured image data stays in the extension UI. Element inspection reads
+bounded computed layout properties without collecting text, identifiers, form values,
+or a DOM dump. Page-derived values are rendered as text.
+
+Capture is serialized, rate-limited, bounded in dimensions and frame count, and
+cancelled when its tab, page, window, viewport, or zoom changes. Capture cleanup
+restores temporary page styles and scrolling. It does not use the debugger or
+permanent website access.
+
+Preferences use trusted-context-only storage. Measurements, baseline comparisons,
+layout-tool settings, and screenshot previews remain in memory. The extension CSP
+blocks remote connections and scripts; local `data:` and `blob:` images support
+screenshot previews.
+
+Local verification covers type checking, formatting, linting, behavioral tests,
+packaged Chrome flows, package contents, and dependency auditing. See
+[the release checklist](store/release-checklist.md) for the recorded status of a release.

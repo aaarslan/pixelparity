@@ -1,12 +1,12 @@
 {
   "extensionName": {
-    "message": "PixelParity — Viewport & Display Metrics"
+    "message": "PixelParity — Layout, Grid & Capture"
   },
   "extensionShortName": {
     "message": "PixelParity"
   },
   "extensionDescription": {
-    "message": "Inspect live viewport, screen, browser zoom, pixel ratio, visual viewport, and responsive breakpoints—locally and on demand."
+    "message": "Inspect responsive layouts, overlay grids and rulers, measure elements, and capture screenshots. Local tools. No telemetry."
   },
   "actionTitle": {
     "message": "Inspect this tab with PixelParity"

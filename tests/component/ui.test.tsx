@@ -2,13 +2,9 @@ import { render, screen, waitFor } from "@testing-library/preact";
 import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { describe, expect, it, vi } from "vitest";
-import {
-  DEMO_BASELINE,
-  DEMO_PREFERENCES,
-  DEMO_SNAPSHOT,
-} from "../../store/source/demo-data";
 import { PopupApp } from "../../src/popup/PopupApp";
 import { SidePanelView } from "../../src/sidepanel/SidePanelApp";
+import { DEMO_BASELINE, DEMO_PREFERENCES, DEMO_SNAPSHOT } from "../fixtures/metrics";
 
 describe("extension UI", () => {
   it("renders the essential popup flow and restores focus after Escape", async () => {
@@ -71,12 +67,12 @@ describe("extension UI", () => {
         onReconnect={() => undefined}
         onSetBaseline={() => undefined}
         onClearBaseline={() => undefined}
-        onPreferencesChange={() => undefined}
+        onPreferencesChange={() => true}
         onStatus={() => undefined}
       />,
     );
     expect(screen.getByText("+256 px wide")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Breakpoints" }));
+    await user.click(screen.getByRole("button", { name: "Profiles" }));
     expect(screen.getByRole("heading", { name: "Breakpoint profile" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Export" }));
     expect(screen.getByRole("heading", { name: "Copy or download" })).toBeInTheDocument();
@@ -99,7 +95,7 @@ describe("extension UI", () => {
         onReconnect={() => undefined}
         onSetBaseline={() => undefined}
         onClearBaseline={() => undefined}
-        onPreferencesChange={() => undefined}
+        onPreferencesChange={() => true}
         onStatus={onStatus}
       />,
     );
@@ -126,7 +122,7 @@ describe("extension UI", () => {
         onReconnect={onReconnect}
         onSetBaseline={() => undefined}
         onClearBaseline={() => undefined}
-        onPreferencesChange={() => undefined}
+        onPreferencesChange={() => true}
         onStatus={() => undefined}
       />,
     );
@@ -149,7 +145,7 @@ describe("extension UI", () => {
         onReconnect={() => undefined}
         onSetBaseline={() => undefined}
         onClearBaseline={() => undefined}
-        onPreferencesChange={() => undefined}
+        onPreferencesChange={() => true}
         onStatus={() => undefined}
       />,
     );

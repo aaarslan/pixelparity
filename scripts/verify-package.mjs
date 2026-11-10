@@ -14,7 +14,9 @@ export const RUNTIME_FILES = [
   "assets/icons/icon48.png",
   "assets/icons/icon128.png",
   "bridge.js",
+  "capture-bridge.js",
   "manifest.json",
+  "overlay.js",
   "popup.html",
   "popup.js",
   "sidepanel.html",
@@ -65,14 +67,14 @@ export async function verifyPackage() {
   if (manifest.manifest_version !== 3 || manifest.minimum_chrome_version !== "116")
     throw new Error("Manifest must target MV3 and Chrome 116 or newer.");
   if (manifest.default_locale !== "en")
-    throw new Error("English must remain the default locale for v2.");
+    throw new Error("English must remain the default locale.");
   if (
     manifest.action?.default_popup !== "popup.html" ||
     manifest.side_panel?.default_path !== "sidepanel.html"
   ) {
     throw new Error("Popup or side-panel entry point changed unexpectedly.");
   }
-  if (messages.extensionName?.message !== "PixelParity — Viewport & Display Metrics")
+  if (messages.extensionName?.message !== "PixelParity — Layout, Grid & Capture")
     throw new Error("Localized extension title does not match the approved listing.");
   const permissions = [...manifest.permissions].sort();
   const expectedPermissions = ["activeTab", "scripting", "sidePanel", "storage"].sort();
@@ -90,7 +92,7 @@ export async function verifyPackage() {
     if (forbidden in manifest) throw new Error(`Forbidden manifest field: ${forbidden}`);
   }
   const expectedCsp =
-    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'";
+    "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'";
   if (manifest.content_security_policy?.extension_pages !== expectedCsp)
     throw new Error("Extension Content Security Policy changed unexpectedly.");
 
@@ -107,6 +109,8 @@ export async function verifyPackage() {
   for (const file of [
     "app.css",
     "bridge.js",
+    "capture-bridge.js",
+    "overlay.js",
     "popup.html",
     "popup.js",
     "sidepanel.html",

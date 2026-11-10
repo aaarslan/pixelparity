@@ -1,6 +1,6 @@
 {
   "name": "pixelparity",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -21,9 +21,10 @@
     "build:pack": "npm run build && npm run pack",
     "assets:brand": "node scripts/generate-brand-assets.mjs",
     "assets:store": "node scripts/capture-store-assets.mjs",
-    "assets:demo": "node scripts/build-demo-video.mjs",
-    "audit:ci": "npm audit --audit-level=high",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build:pack && npm run audit:ci"
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run build:pack && npm run audit",
+    "audit": "npm audit --audit-level=high",
+    "assets:promos": "node scripts/generate-promos.mjs",
+    "preview": "npm run build && node scripts/serve-preview.mjs"
   },
   "dependencies": {
     "preact": "10.29.7"
@@ -33,21 +34,19 @@
     "@testing-library/preact": "3.2.4",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/user-event": "14.6.1",
-    "@types/archiver": "7.0.0",
     "@types/chrome": "0.2.2",
     "@types/node": "25.3.3",
-    "archiver": "8.0.0",
     "axe-core": "4.10.3",
     "esbuild": "0.28.1",
     "jsdom": "29.1.1",
-    "puppeteer": "25.3.0",
-    "sharp": "0.35.4",
+    "puppeteer": "25.17.0",
+    "sharp": "0.35.5",
     "typescript": "7.0.2",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "allowScripts": {
     "esbuild@0.28.1": true,
     "fsevents@2.3.3": true,
-    "puppeteer@25.3.0": true
+    "puppeteer@25.17.0": true
   }
 }

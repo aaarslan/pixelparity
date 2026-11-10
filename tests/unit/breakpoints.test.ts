@@ -9,6 +9,22 @@ import { CLASSIC_PROFILE } from "../../src/shared/constants";
 import type { BreakpointProfile } from "../../src/shared/types";
 
 describe("breakpoint profiles", () => {
+  it("reports the base range below a custom profile's first threshold", () => {
+    const profile = {
+      id: "custom",
+      name: "Custom",
+      points: [{ id: "wide", label: "Wide", minWidth: 800 }],
+    };
+    expect(getActiveBreakpoint(600, profile)).toMatchObject({
+      label: "Base",
+      minWidth: 0,
+      nextMinWidth: 800,
+    });
+    expect(getActiveBreakpoint(800, profile)).toMatchObject({
+      label: "Wide",
+      nextMinWidth: null,
+    });
+  });
   it.each([
     [0, "XS"],
     [575, "XS"],

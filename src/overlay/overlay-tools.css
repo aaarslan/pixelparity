@@ -1,0 +1,321 @@
+@layer components {
+  .layout-tools {
+    container-type: inline-size;
+  }
+
+  .layout-grid-card,
+  .layout-picker-card,
+  .layout-measurement {
+    display: grid;
+    gap: 14px;
+  }
+
+  .layout-grid-card .section-heading {
+    margin: 0;
+  }
+
+  .layout-description,
+  .layout-hint {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .layout-hint {
+    font-size: 11px;
+  }
+
+  .layout-toggle {
+    position: relative;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 24px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    padding: 3px;
+    background: var(--surface-soft);
+    cursor: pointer;
+  }
+
+  .layout-toggle > span {
+    display: block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: transform var(--duration);
+  }
+
+  .layout-toggle[aria-checked="true"] {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .layout-toggle[aria-checked="true"] > span {
+    transform: translateX(16px);
+    background: var(--accent-text);
+  }
+
+  .layout-tools :disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+
+  .layout-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border: 0;
+    padding: 0;
+  }
+
+  .layout-presets button {
+    padding: 6px 9px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface-soft);
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .layout-presets button:hover:not(:disabled) {
+    background: var(--surface-accent);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .layout-style-fieldset {
+    border: 0;
+    padding: 0;
+    min-width: 0;
+  }
+
+  .layout-style-fieldset legend {
+    margin-bottom: 7px;
+  }
+
+  .layout-segmented {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-soft);
+  }
+
+  .layout-segmented label {
+    position: relative;
+    min-width: 0;
+    cursor: pointer;
+  }
+
+  .layout-segmented input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .layout-segmented span {
+    display: block;
+    padding: 7px 3px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .layout-segmented input:checked + span {
+    border-color: var(--border);
+    background: var(--surface-raised);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 8%);
+  }
+
+  .layout-segmented input:focus-visible + span {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  .layout-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .layout-number-field {
+    min-width: 0;
+    font-size: 11px;
+  }
+
+  .layout-number-field input {
+    min-width: 0;
+    width: 100%;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .layout-appearance {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 20px;
+    align-items: end;
+  }
+
+  .layout-color-field input {
+    width: 100%;
+    height: 30px;
+    padding: 3px;
+    border: 1px solid var(--border-strong);
+    border-radius: 7px;
+    background: var(--surface-soft);
+    cursor: pointer;
+  }
+
+  .layout-opacity > span {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+
+  .layout-opacity input {
+    width: 100%;
+    height: 30px;
+    margin: 0;
+    accent-color: var(--accent);
+  }
+
+  .layout-ruler-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .layout-ruler-card h2 {
+    margin-bottom: 3px;
+  }
+
+  .layout-units {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .layout-bounds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .layout-bounds > div {
+    display: grid;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    background: var(--surface-soft);
+  }
+
+  .layout-bounds span {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .layout-bounds strong {
+    font-size: 24px;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+  }
+
+  .layout-edge-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .layout-edge-row {
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .layout-edge-row > :first-child {
+    text-align: left;
+    color: var(--text-muted);
+    width: 26%;
+    font-weight: 500;
+  }
+
+  .layout-edge-heading {
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+
+  .layout-edge-heading > th {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    font-weight: 500;
+  }
+
+  .layout-facts {
+    display: grid;
+    gap: 7px;
+    padding-block: 10px;
+    border-block: 1px solid var(--border);
+    font-size: 11px;
+  }
+
+  .layout-facts > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .layout-facts dt {
+    color: var(--text-muted);
+  }
+
+  .layout-facts dd {
+    text-align: right;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .layout-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .layout-footer > span {
+    max-width: 175px;
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.5;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .layout-toggle > span {
+      transition: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .layout-toggle[aria-checked="true"] {
+      background: Highlight;
+    }
+
+    .layout-toggle > span,
+    .layout-toggle[aria-checked="true"] > span {
+      background: ButtonText;
+    }
+
+    .layout-segmented input:checked + span {
+      border-color: Highlight;
+    }
+  }
+}

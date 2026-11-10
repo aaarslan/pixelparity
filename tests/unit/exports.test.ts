@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_BASELINE, DEMO_SNAPSHOT } from "../../store/source/demo-data";
 import {
   serializeCss,
   serializeJson,
@@ -8,6 +7,7 @@ import {
   serializeTsv,
 } from "../../src/shared/exports";
 import { serializeIssueReport } from "../../src/shared/issue-report";
+import { DEMO_BASELINE, DEMO_SNAPSHOT } from "../fixtures/metrics";
 
 describe("snapshot exports", () => {
   it("serializes a versioned JSON snapshot", () => {

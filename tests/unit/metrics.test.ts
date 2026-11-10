@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEMO_PAGE_METRICS } from "../../store/source/demo-data";
 import { CLASSIC_PROFILE } from "../../src/shared/constants";
 import { capturePageMetrics, createSnapshot } from "../../src/shared/metrics";
+import { DEMO_PAGE_METRICS } from "../fixtures/metrics";
 
 describe("metrics", () => {
   afterEach(() => {
