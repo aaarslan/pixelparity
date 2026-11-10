@@ -268,7 +268,7 @@ function BreakpointManager({
     );
 
   return (
-    <div class="panel-section-stack">
+    <div class="panel-section-stack profiles-panel">
       <section class="panel-card">
         <div class="section-heading">
           <div>

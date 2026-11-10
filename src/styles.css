@@ -48,6 +48,10 @@
     --space-6: 20px;
   }
 
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+
   :root[data-theme="dark"] {
     color-scheme: dark;
     --bg: #09111f;
@@ -615,7 +619,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: var(--space-2);
     min-block-size: var(--control-size);
     padding: 8px 12px;
     border: 1px solid transparent;
@@ -701,11 +705,32 @@
   select,
   input:not([type="radio"]):not([type="checkbox"]) {
     inline-size: 100%;
+    min-inline-size: 0;
     min-block-size: var(--control-size);
     padding-inline: 11px;
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-sm);
     background: var(--surface);
+  }
+
+  select {
+    appearance: none;
+    padding-inline: var(--space-3) 40px;
+    background-image:
+      linear-gradient(45deg, transparent 42%, currentColor 42% 58%, transparent 58%),
+      linear-gradient(135deg, transparent 42%, currentColor 42% 58%, transparent 58%);
+    background-position:
+      right 18px center,
+      right 12px center;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+  }
+
+  :root[dir="rtl"] select:not([dir="ltr"]),
+  select[dir="rtl"] {
+    background-position:
+      left 12px center,
+      left 18px center;
   }
 
   .panel-nav {
@@ -875,6 +900,19 @@
     margin-block: var(--space-3);
   }
 
+  .profiles-panel > .panel-card,
+  .profiles-panel .field-label {
+    min-inline-size: 0;
+  }
+
+  .profiles-panel .field-label + .breakpoint-rail {
+    margin-block-start: var(--space-3);
+  }
+
+  .profiles-panel .empty-copy + .button {
+    margin-block-start: var(--space-4);
+  }
+
   .profile-list li {
     display: flex;
     align-items: center;
@@ -888,6 +926,12 @@
 
   .profile-list li > div:first-child {
     display: grid;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-list .row-actions {
+    flex-shrink: 0;
   }
 
   .profile-list li span {
@@ -1138,6 +1182,11 @@
   @media (forced-colors: active) {
     :root {
       --shadow: none;
+    }
+
+    select {
+      appearance: auto;
+      background-image: none;
     }
 
     .primary-metric--accent,

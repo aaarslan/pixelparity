@@ -7,7 +7,7 @@
 | Version and title | 3.0.0 · PixelParity — Layout, Grid & Capture |
 | Local code and package checks | **Passed:** formatting, lint, strict types, 106 tests, production build, archive checks, dependency audit |
 | Installed-Chrome qualification and visual review | **Blocked in this environment; pending on a machine that can run Chrome extensions** |
-| Candidate ZIP | **Built:** 64,358 bytes; 14 runtime files; reproducible |
+| Candidate ZIP | **Built:** 64,571 bytes; 14 runtime files; reproducible |
 | Promotional artwork | **Complete:** 440×280 and 1400×560 RGB PNGs, visually reviewed |
 | Five v3 product screenshots | **Pending:** installed-extension generator is ready but has not run |
 | GitHub source | PR #4 on `feature/pixelparity-3-layout-capture`; runtime qualification remains required before release |
@@ -30,6 +30,8 @@ started at 2.1.0. No production store package or listing was changed.
 - [x] PR #4 regression checks passed for numeric editing, fractional bitmap scaling,
   and HTTP-compatible capture initialization. The bundled CSS establishes cascade
   layer order before component styles.
+- [x] Profiles control insets, action spacing, narrow-name wrapping, and native theme
+  handling reviewed in source. Rendered visual qualification remains pending.
 - [x] Production build and runtime allowlist verification passed.
 - [x] `npm audit --audit-level=high` reported **0 vulnerabilities** at all severities.
 - [x] Consecutive `node scripts/pack.mjs` runs produced identical bytes.
@@ -44,9 +46,9 @@ started at 2.1.0. No production store package or listing was changed.
 | Evidence | Value |
 | --- | --- |
 | Package | `builds/pixelparity-3.0.0.zip` |
-| SHA-256 | `4e087cf9dfc8cce3c94933ca1a395d4070e37fd684134be2b27d29bbdb50ca21` |
-| Archive size | 64,358 bytes |
-| Uncompressed runtime | 187,423 bytes across 14 files |
+| SHA-256 | `43ff4d0afa43824bdcc3a789c80d768fbba910e427ddc5710f93fe063a62c721` |
+| Archive size | 64,571 bytes |
+| Uncompressed runtime | 188,305 bytes across 14 files |
 | Source commit | Recorded by PR #4 and the downloadable release kit's `release-manifest.json` |
 | Node | 24.22.1 |
 | OS | Linux x86_64; Debian 13 runtime; glibc 2.41 |
@@ -57,6 +59,8 @@ The executor prevented Chromium from opening a required Unix-domain socket. Nati
 UI control was unavailable, and the cloud browser could not reach the executor's
 loopback preview. These limitations do not establish browser compatibility or visual
 quality. No installed-extension E2E or successful capture API result is claimed.
+The browser URL policy also blocked the isolated Profiles spacing preview; no new
+visual verification is claimed for that screen.
 
 ## Remaining qualification
 

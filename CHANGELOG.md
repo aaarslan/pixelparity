@@ -37,6 +37,8 @@ All notable PixelParity changes are documented here.
 - Establish cascade layer priority before importing tool styles
 - Account for independent bitmap rounding at fractional capture scales
 - Initialize capture on ordinary HTTP pages without secure-context-only UUID APIs
+- Give dropdown indicators consistent insets and profile actions clearer spacing
+- Keep long profile names inside narrow panels and native controls in the chosen theme
 
 Release qualification, store submission, and publication remain tracked in
 [the release checklist](store/release-checklist.md).
