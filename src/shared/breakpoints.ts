@@ -31,8 +31,8 @@ export function getActiveBreakpoint(
 ): ActiveBreakpoint {
   const safeWidth = Number.isFinite(width) ? Math.max(0, width) : 0;
   const points = [...profile.points].sort((a, b) => a.minWidth - b.minWidth);
-  const fallback: BreakpointPoint = points[0] ?? {
-    id: "fallback",
+  const fallback: BreakpointPoint = {
+    id: "pixelparity-base-range",
     label: "Base",
     minWidth: 0,
   };
@@ -44,7 +44,7 @@ export function getActiveBreakpoint(
   }
 
   const activeIndex = points.findIndex((point) => point.id === active.id);
-  const next = activeIndex >= 0 ? points[activeIndex + 1] : undefined;
+  const next = activeIndex >= 0 ? points[activeIndex + 1] : points[0];
 
   return {
     profileId: profile.id,

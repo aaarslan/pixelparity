@@ -1,3 +1,6 @@
+@import "./overlay/overlay-tools.css";
+@import "./capture/capture.css";
+
 @layer reset, theme, base, components, utilities;
 
 @layer theme {
@@ -707,24 +710,53 @@
 
   .panel-nav {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    padding: 4px var(--space-4);
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    padding: 4px 6px;
     background: var(--surface);
     border-block-end: 1px solid var(--border);
   }
 
   .panel-nav button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     position: relative;
-    min-block-size: var(--control-size);
+    min-block-size: 54px;
+    min-inline-size: 0;
+    padding-inline: 2px;
     background: transparent;
     color: var(--text-muted);
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
   }
 
   .panel-nav button.is-active {
     color: var(--accent);
+  }
+
+  .panel-nav .icon {
+    inline-size: 19px;
+    block-size: 19px;
+  }
+
+  .signal-dot {
+    inline-size: 9px;
+    block-size: 9px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--success) 12%, transparent);
+  }
+
+  .signal-dot--warning {
+    background: var(--danger);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--danger) 12%, transparent);
+  }
+
+  .signal-warning {
+    color: var(--danger);
   }
 
   .panel-nav button.is-active::after {

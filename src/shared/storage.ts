@@ -212,6 +212,14 @@ export async function migratePreferences(
     ...PROFILE_STORAGE_KEYS,
   ]);
   const existing = readStoredPreferences(stored);
+  const existingIndex = asPreferencesIndex(stored[STORAGE_KEYS.preferences]);
+  if (
+    existing &&
+    existingIndex &&
+    existing.activeProfileId === existingIndex.activeProfileId
+  ) {
+    return normalizePreferences(existing);
+  }
   const legacyTheme = stored[STORAGE_KEYS.legacyTheme];
   const legacyCompact = stored[STORAGE_KEYS.legacyCompactMode];
   const preferences = existing

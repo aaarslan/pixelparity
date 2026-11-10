@@ -14,6 +14,10 @@ export function toStableError(error: unknown): PixelParityError {
   if (error instanceof PixelParityError) return error;
   const message = error instanceof Error ? error.message.toLocaleLowerCase("en-US") : "";
 
+  if (message.includes("host permission") || message.includes("missing permission")) {
+    return new PixelParityError("ACCESS_REVOKED");
+  }
+
   if (
     message.includes("cannot access") ||
     message.includes("extensions gallery") ||

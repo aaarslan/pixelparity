@@ -26,7 +26,7 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       <PixelMark size={compact ? 30 : 34} />
       <div>
         <span class="brand-name">PixelParity</span>
-        {!compact && <span class="brand-subtitle">Display inspector</span>}
+        {!compact && <span class="brand-subtitle">Your layout toolkit</span>}
       </div>
     </div>
   );
@@ -45,7 +45,11 @@ export function Icon({
     | "download"
     | "plus"
     | "trash"
-    | "edit";
+    | "edit"
+    | "grid"
+    | "camera"
+    | "inspect"
+    | "profiles";
 }) {
   const paths: Record<typeof name, ComponentChildren> = {
     refresh: <path d="M18 8a7 7 0 1 0 1 7h-2.1a5 5 0 1 1-.4-4.2L13 14h8V6z" />,
@@ -63,6 +67,16 @@ export function Icon({
     trash: <path d="M8 7h8l-.7 13H8.7zM6 4h4l1-1h2l1 1h4v2H6z" />,
     edit: (
       <path d="m5 16.2-.8 3.6 3.6-.8L18.5 8.3l-2.8-2.8zM17.1 4.1l1.4-1.4 2.8 2.8-1.4 1.4z" />
+    ),
+    grid: <path d="M3 3h18v18H3zm2 2v5h5V5zm7 0v5h7V5zM5 12v7h5v-7zm7 0v7h7v-7z" />,
+    camera: (
+      <path d="M8 3h8l2 3h3v15H3V6h3zm1 2L7 8H5v11h14V8h-3l-2-3zm3 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4z" />
+    ),
+    inspect: (
+      <path d="M10 3a7 7 0 1 0 4.9 12l5 5 1.4-1.4-5-5A7 7 0 0 0 10 3zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z" />
+    ),
+    profiles: (
+      <path d="M4 5h16v2H4zm0 6h16v2H4zm0 6h16v2H4zM7 3h2v6H7zm8 6h2v6h-2zm-6 6h2v6H9z" />
     ),
   };
   return (

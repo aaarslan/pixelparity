@@ -1,5 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { Brand, Icon } from "../components/Brand";
+import { CaptureTools } from "../components/CaptureTools";
+import { OverlayTools } from "../components/OverlayTools";
+import { useInspector, type InspectorState } from "./useInspector";
 import { BreakpointRail, MetricDetails, PrimaryMetrics } from "../components/Metrics";
 import {
   createPointId,
@@ -9,37 +12,31 @@ import {
   validateCustomProfiles,
   validateProfile,
 } from "../shared/breakpoints";
-import {
-  connectLiveBridge,
-  injectBridge,
-  mergeLiveMetrics,
-  sendLiveControl,
-} from "../shared/chrome-runtime";
-import {
-  DEFAULT_PREFERENCES,
-  MAX_BREAKPOINTS_PER_PROFILE,
-  MAX_CUSTOM_PROFILES,
-} from "../shared/constants";
-import { ERROR_CONTENT, toStableError } from "../shared/errors";
+import { MAX_BREAKPOINTS_PER_PROFILE, MAX_CUSTOM_PROFILES } from "../shared/constants";
+import { ERROR_CONTENT } from "../shared/errors";
 import { downloadJson, EXPORT_LABELS, serializeSnapshot } from "../shared/exports";
 import { formatTimestamp } from "../shared/format";
 import { serializeIssueReport } from "../shared/issue-report";
-import { MESSAGE_TYPES, isLiveBridgeMessage } from "../shared/protocol";
-import { initializeStorage, savePreferences } from "../shared/storage";
-import { applyPreferencesToDocument } from "../shared/theme";
 import type {
   BreakpointProfile,
   ExportFormat,
   MetricsSnapshotV2,
-  PageMetrics,
   PreferencesV2,
   StableErrorCode,
 } from "../shared/types";
 
-type InspectorState = "connecting" | "live" | "paused" | "error";
-export type PanelSection = "inspect" | "breakpoints" | "export";
+export type PanelSection = "inspect" | "layout" | "capture" | "breakpoints" | "export";
+
+const SECTIONS = [
+  { id: "inspect", label: "Inspect", icon: "inspect" },
+  { id: "layout", label: "Layout", icon: "grid" },
+  { id: "capture", label: "Capture", icon: "camera" },
+  { id: "breakpoints", label: "Profiles", icon: "profiles" },
+  { id: "export", label: "Export", icon: "download" },
+] as const;
 
 interface SidePanelViewProps {
+  tabId?: number;
   preferences: PreferencesV2;
   snapshot: MetricsSnapshotV2 | null;
   baseline: MetricsSnapshotV2 | null;
@@ -50,7 +47,7 @@ interface SidePanelViewProps {
   onReconnect: () => void;
   onSetBaseline: () => void;
   onClearBaseline: () => void;
-  onPreferencesChange: (preferences: PreferencesV2) => Promise<void> | void;
+  onPreferencesChange: (preferences: PreferencesV2) => Promise<boolean> | boolean;
   onStatus: (message: string) => void;
 }
 
@@ -233,11 +230,15 @@ function BreakpointManager({
       setError(validation.errors.join(" "));
       return;
     }
-    await onPreferencesChange({
+    const saved = await onPreferencesChange({
       ...preferences,
       customProfiles: nextProfiles,
       activeProfileId: profile.id,
     });
+    if (saved === false) {
+      setError("The profile could not be saved. Please try again.");
+      return;
+    }
     setError("");
     setDraft(null);
   };
@@ -246,7 +247,7 @@ function BreakpointManager({
     const nextProfiles = preferences.customProfiles.filter(
       (profile) => profile.id !== profileId,
     );
-    await onPreferencesChange({
+    const saved = await onPreferencesChange({
       ...preferences,
       customProfiles: nextProfiles,
       activeProfileId:
@@ -254,6 +255,7 @@ function BreakpointManager({
           ? "pixelparity-classic"
           : preferences.activeProfileId,
     });
+    if (saved === false) setError("The profile could not be removed. Please try again.");
   };
 
   if (draft)
@@ -516,6 +518,7 @@ function ExportPanel({
 
 export function SidePanelView(props: SidePanelViewProps) {
   const [section, setSection] = useState<PanelSection>(props.defaultSection ?? "inspect");
+  const [captureBusy, setCaptureBusy] = useState(false);
   const { snapshot, baseline, inspectorState, errorCode } = props;
   const profile = findProfile(
     props.preferences.activeProfileId,
@@ -530,23 +533,22 @@ export function SidePanelView(props: SidePanelViewProps) {
         <ConnectionPill state={inspectorState} />
       </header>
       <nav class="panel-nav" aria-label="Inspector sections">
-        {(["inspect", "breakpoints", "export"] as PanelSection[]).map((item) => (
+        {SECTIONS.map((item) => (
           <button
             type="button"
-            class={section === item ? "is-active" : undefined}
-            aria-current={section === item ? "page" : undefined}
-            onClick={() => setSection(item)}
-            key={item}
+            class={section === item.id ? "is-active" : undefined}
+            data-section={item.id}
+            aria-current={section === item.id ? "page" : undefined}
+            onClick={() => setSection(item.id)}
+            key={item.id}
           >
-            {item === "inspect"
-              ? "Inspect"
-              : item === "breakpoints"
-                ? "Breakpoints"
-                : "Export"}
+            <Icon name={item.icon} />
+            {item.label}
           </button>
         ))}
       </nav>
       <main class="app-scroll panel-main">
+        <h1 class="sr-only">PixelParity layout toolkit</h1>
         {inspectorState === "connecting" && !snapshot && (
           <section class="state-view" role="status">
             <span class="loader" aria-hidden="true" />
@@ -561,13 +563,18 @@ export function SidePanelView(props: SidePanelViewProps) {
             </span>
             <h1>{error.title}</h1>
             <p>{error.message}</p>
-            <button
-              class="button button--primary"
-              type="button"
-              onClick={props.onReconnect}
-            >
-              {error.action}
-            </button>
+            {(errorCode === "ACCESS_REVOKED" || errorCode === "BRIDGE_UNAVAILABLE") && (
+              <p>Open PixelParity from the toolbar on this page to grant access again.</p>
+            )}
+            {errorCode !== "RESTRICTED_PAGE" && (
+              <button
+                class="button button--primary"
+                type="button"
+                onClick={props.onReconnect}
+              >
+                {error.action}
+              </button>
+            )}
           </section>
         )}
         {snapshot && section === "inspect" && (
@@ -588,6 +595,47 @@ export function SidePanelView(props: SidePanelViewProps) {
               </div>
             )}
             <PrimaryMetrics snapshot={snapshot} baseline={baseline} />
+            <section
+              class="panel-card layout-signals"
+              aria-labelledby="layout-signals-title"
+            >
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">At a glance</p>
+                  <h2 id="layout-signals-title">Layout checks</h2>
+                </div>
+                <span
+                  class={`signal-dot ${snapshot.document.width > snapshot.viewport.layout.width + 1 ? "signal-dot--warning" : ""}`}
+                  aria-hidden="true"
+                />
+              </div>
+              <dl class="metric-list">
+                <div class="metric-row">
+                  <dt>Horizontal overflow</dt>
+                  <dd
+                    class={
+                      snapshot.document.width > snapshot.viewport.layout.width + 1
+                        ? "signal-warning"
+                        : undefined
+                    }
+                  >
+                    {Math.max(
+                      0,
+                      Math.round(snapshot.document.width - snapshot.viewport.layout.width),
+                    )}{" "}
+                    px
+                  </dd>
+                </div>
+                <div class="metric-row">
+                  <dt>Next breakpoint</dt>
+                  <dd>
+                    {snapshot.breakpoint.nextMinWidth === null
+                      ? "Largest range"
+                      : `${Math.max(0, Math.ceil(snapshot.breakpoint.nextMinWidth - snapshot.viewport.layout.width))} px away`}
+                  </dd>
+                </div>
+              </dl>
+            </section>
             <section class="baseline-card">
               <div>
                 <Icon name="baseline" />
@@ -620,35 +668,6 @@ export function SidePanelView(props: SidePanelViewProps) {
                 </button>
               )}
             </section>
-            <section
-              class="panel-card reproduction-card"
-              aria-labelledby="reproduction-guide-title"
-            >
-              <p class="eyebrow">Responsive issue workflow</p>
-              <h2 id="reproduction-guide-title">Inspect, baseline, reproduce, export</h2>
-              <ol>
-                <li>
-                  <strong>Inspect</strong>
-                  <span>
-                    Record the current viewport, Chrome tab zoom, and responsive range.
-                  </span>
-                </li>
-                <li>
-                  <strong>{baseline ? "Baseline captured" : "Capture a baseline"}</strong>
-                  <span>
-                    {baseline
-                      ? "Resize or change Chrome tab zoom to reproduce the mismatch."
-                      : "Set the working state before changing the viewport or zoom."}
-                  </span>
-                </li>
-                <li>
-                  <strong>Export</strong>
-                  <span>
-                    Open Export to copy an issue-ready comparison with no page metadata.
-                  </span>
-                </li>
-              </ol>
-            </section>
             <section class="panel-card">
               <div class="section-heading">
                 <div>
@@ -671,6 +690,26 @@ export function SidePanelView(props: SidePanelViewProps) {
             snapshot={snapshot}
             onPreferencesChange={props.onPreferencesChange}
           />
+        )}
+        {props.tabId !== undefined && (
+          <>
+            <div hidden={section !== "layout"}>
+              <OverlayTools
+                tabId={props.tabId}
+                locked={captureBusy}
+                enabled={inspectorState === "live"}
+                onStatus={props.onStatus}
+              />
+            </div>
+            <div hidden={section !== "capture"}>
+              <CaptureTools
+                tabId={props.tabId}
+                onBusyChange={setCaptureBusy}
+                enabled={inspectorState === "live"}
+                onStatus={props.onStatus}
+              />
+            </div>
+          </>
         )}
         {section === "export" && (
           <ExportPanel
@@ -698,157 +737,22 @@ function parseTabId(): number | null {
 }
 
 export function SidePanelApp() {
-  const [preferences, setPreferences] = useState<PreferencesV2>(DEFAULT_PREFERENCES);
-  const [snapshot, setSnapshot] = useState<MetricsSnapshotV2 | null>(null);
-  const [baseline, setBaseline] = useState<MetricsSnapshotV2 | null>(null);
-  const [inspectorState, setInspectorState] = useState<InspectorState>("connecting");
-  const [errorCode, setErrorCode] = useState<StableErrorCode>("UNKNOWN");
-  const [status, setStatus] = useState("");
-  const portRef = useRef<chrome.runtime.Port | null>(null);
-  const pageMetricsRef = useRef<PageMetrics | null>(null);
-  const preferencesRef = useRef(preferences);
-  const intentionalPorts = useRef(new WeakSet<chrome.runtime.Port>());
   const tabId = parseTabId();
-
-  const connect = useCallback(async () => {
-    if (tabId === null) {
-      setErrorCode("NO_ACTIVE_TAB");
-      setInspectorState("error");
-      return;
-    }
-    setInspectorState("connecting");
-    if (portRef.current) {
-      intentionalPorts.current.add(portRef.current);
-      portRef.current.disconnect();
-      portRef.current = null;
-    }
-    try {
-      await injectBridge(tabId);
-      const port = connectLiveBridge(tabId);
-      portRef.current = port;
-      port.onMessage.addListener((message: unknown) => {
-        if (!isLiveBridgeMessage(message)) return;
-        if (message.type === MESSAGE_TYPES.bridgeError) {
-          setErrorCode(message.code);
-          setInspectorState("error");
-          return;
-        }
-        pageMetricsRef.current = message.metrics;
-        void mergeLiveMetrics(tabId, message.metrics, preferencesRef.current)
-          .then((next) => {
-            setSnapshot(next);
-            setInspectorState(document.hidden ? "paused" : "live");
-          })
-          .catch((error) => {
-            setErrorCode(toStableError(error).code);
-            setInspectorState("error");
-          });
-      });
-      port.onDisconnect.addListener(() => {
-        if (intentionalPorts.current.has(port)) return;
-        if (portRef.current === port) portRef.current = null;
-        setBaseline(null);
-        setErrorCode("ACCESS_REVOKED");
-        setInspectorState("error");
-      });
-      sendLiveControl(port, {
-        type: document.hidden ? MESSAGE_TYPES.liveStop : MESSAGE_TYPES.liveStart,
-      });
-    } catch (error) {
-      setErrorCode(toStableError(error).code);
-      setInspectorState("error");
-    }
-  }, [tabId]);
-
-  useEffect(() => {
-    let cancelled = false;
-    void initializeStorage()
-      .then((stored) => {
-        if (cancelled) return;
-        preferencesRef.current = stored;
-        setPreferences(stored);
-        applyPreferencesToDocument(stored);
-        void connect();
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        setErrorCode(toStableError(error).code);
-        setInspectorState("error");
-      });
-
-    const onVisibility = () => {
-      const port = portRef.current;
-      if (!port) return;
-      try {
-        sendLiveControl(port, {
-          type: document.hidden ? MESSAGE_TYPES.liveStop : MESSAGE_TYPES.liveStart,
-        });
-        setInspectorState(document.hidden ? "paused" : "live");
-      } catch {
-        portRef.current = null;
-        setBaseline(null);
-        setErrorCode("ACCESS_REVOKED");
-        setInspectorState("error");
-      }
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    const onZoom = (info: chrome.tabs.OnZoomChangeInfo) => {
-      if (info.tabId !== tabId || !pageMetricsRef.current || tabId === null) return;
-      void mergeLiveMetrics(tabId, pageMetricsRef.current, preferencesRef.current).then(
-        setSnapshot,
-      );
-    };
-    const onUpdated = (updatedTabId: number, changeInfo: chrome.tabs.OnUpdatedInfo) => {
-      if (updatedTabId === tabId && changeInfo.status === "loading") setBaseline(null);
-    };
-    chrome.tabs.onZoomChange.addListener(onZoom);
-    chrome.tabs.onUpdated.addListener(onUpdated);
-
-    return () => {
-      cancelled = true;
-      if (portRef.current) {
-        intentionalPorts.current.add(portRef.current);
-        portRef.current.disconnect();
-      }
-      portRef.current = null;
-      document.removeEventListener("visibilitychange", onVisibility);
-      chrome.tabs.onZoomChange.removeListener(onZoom);
-      chrome.tabs.onUpdated.removeListener(onUpdated);
-    };
-  }, [connect, tabId]);
-
-  const updatePreferences = async (next: PreferencesV2) => {
-    const saved = await savePreferences(next);
-    preferencesRef.current = saved;
-    setPreferences(saved);
-    applyPreferencesToDocument(saved);
-    if (pageMetricsRef.current && tabId !== null) {
-      setSnapshot(await mergeLiveMetrics(tabId, pageMetricsRef.current, saved));
-    }
-  };
-
+  const inspector = useInspector(tabId);
   return (
     <SidePanelView
-      preferences={preferences}
-      snapshot={snapshot}
-      baseline={baseline}
-      inspectorState={inspectorState}
-      errorCode={errorCode}
-      status={status}
-      onReconnect={() => void connect()}
-      onSetBaseline={() => {
-        if (snapshot) {
-          setBaseline(structuredClone(snapshot));
-          setStatus("Baseline captured in memory.");
-        }
-      }}
-      onClearBaseline={() => {
-        setBaseline(null);
-        setStatus("Baseline cleared.");
-      }}
-      onPreferencesChange={updatePreferences}
-      onStatus={setStatus}
+      {...(tabId === null ? {} : { tabId })}
+      preferences={inspector.preferences}
+      snapshot={inspector.snapshot}
+      baseline={inspector.baseline}
+      inspectorState={inspector.inspectorState}
+      errorCode={inspector.errorCode}
+      status={inspector.status}
+      onReconnect={() => void inspector.connect()}
+      onSetBaseline={inspector.captureBaseline}
+      onClearBaseline={inspector.clearBaseline}
+      onPreferencesChange={inspector.updatePreferences}
+      onStatus={inspector.setStatus}
     />
   );
 }

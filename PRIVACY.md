@@ -1,92 +1,107 @@
 # PixelParity Privacy Policy
 
-Last updated: July 18, 2026
+Last updated: November 10, 2026
 
-Applies to: PixelParity 2.0.0 and later
+Applies to: PixelParity 3.0.0
 
-PixelParity is a local, account-free Chrome extension for inspecting viewport,
-display, zoom, and responsive-layout measurements. It has no analytics, telemetry,
-advertising, tracking, external APIs, or developer-operated servers.
+PixelParity helps you inspect and document website layouts. It has no accounts,
+analytics, telemetry, advertising, tracking, external APIs, or developer-operated
+servers. The extension's processing happens locally on your device, after you invoke
+it for a tab.
 
 ## What PixelParity processes
 
-After you explicitly invoke PixelParity on a tab, the extension temporarily reads
-browser-exposed display properties from that tab:
+| Feature | Information processed locally |
+| --- | --- |
+| Viewport inspection | Layout and visual viewport dimensions, browser zoom, DPR, screen dimensions, document size, typography, and browser-exposed media capabilities |
+| Grids and rulers | Viewport/scroll coordinates and your selected guide settings |
+| Element inspection | The selected element's tag name, rectangle, and computed layout values, including margin, padding, border, gaps, font size, and line height |
+| Screenshots | Rendered website content from the viewport, selected visible region, or scrolled main document that you choose to capture |
 
-- Layout and visual viewport dimensions, offset, and visual scale
-- Outer-window and scrollbar dimensions
-- Screen and available-screen dimensions in CSS pixels
-- Device pixel ratio, color depth, orientation, and document extent
-- Root and body font sizes
-- Color scheme, reduced-motion, forced-colors, pointer, hover, and color-gamut media
-  capabilities
-- The current tab’s browser zoom through Chrome’s Tabs API
+Screenshots are a form of website-content processing even though they never leave
+your device through PixelParity. They contain whatever is visibly rendered in the
+chosen capture. Full-page capture temporarily scrolls the page and may adjust
+sticky/fixed elements according to your selected option; the capture helper restores
+its changes when capture completes or stops.
 
-This processing occurs on your device only so the popup and side panel can show the
-requested measurements. PixelParity does not read or include the page URL, page title,
-page content, form values, browsing history, cookies, or account identity in a
-measurement snapshot.
+Measurement records and their text exports do not include page URLs, page titles,
+element text, form values, cookies, browsing history, or account identity. PixelParity
+does not read cookies, authentication tokens, or browser history. It uses transient
+tab/window identifiers to keep its tools attached to the page you invoked.
 
-## What PixelParity stores
+## What is stored and for how long
 
-Live measurements and comparison baselines are held only in the memory of the open
-popup or side panel. They are not written to Chrome storage and disappear when that
-extension view closes. A baseline also clears when the inspected page navigates.
+**Measurements and baselines** remain in the memory of the open extension view.
+They are not written to Chrome storage. Closing the view clears its memory. Loading
+another document in the inspected tab or losing the page connection clears its current
+measurements and comparison baseline.
 
-PixelParity stores only these preferences in `chrome.storage.sync`:
+**Overlay settings and element measurements** belong to the current tool session.
+They are not saved to Chrome storage or synchronized. Ending the session removes the
+page overlays and releases its state.
 
-- Theme: system, light, or dark
-- Display density: comfortable or compact
-- Active breakpoint profile
-- Up to 10 custom breakpoint profiles
-- Default export format
+**Screenshots** are held in the side panel's memory for preview and export. They are
+not written to extension storage or sent to any server. Discarding a preview,
+replacing it with another capture, or closing the panel releases that preview. Files
+you choose to save and images you copy to the clipboard remain under your control;
+closing PixelParity does not delete them.
 
-Chrome may sync these preferences between browsers signed into the same Google
-account when Chrome Sync is enabled. That synchronization is operated by Google under
-the user’s Chrome settings; the PixelParity developer does not receive the synced
-values or a user identity. Storage access is restricted to trusted extension pages,
-not the injected measurement bridge.
+**Extension preferences** are saved in `chrome.storage.sync`:
 
-When upgrading from v1, PixelParity deletes the obsolete local metrics cache,
-including any URL previously stored there, and removes the old preference keys. The
-migration does not transmit that value.
+- System, light, or dark theme
+- Comfortable or compact density
+- Active breakpoint profile and up to 10 custom profiles
+- Preferred measurement export format
 
-## Data collection and transmission
+Google may synchronize these preferences between signed-in browsers when Chrome Sync
+is enabled. This follows your Chrome settings and Google's services. The PixelParity
+developer does not receive the preferences or your account identity. Storage access is
+restricted to trusted extension contexts rather than injected page helpers.
 
-PixelParity does not collect, sell, share, or transmit user data. The extension makes
-no network requests. All JavaScript, CSS, HTML, and image files execute from the
-installed package under a Content Security Policy that blocks network connections and
-remote code.
+The migration from older PixelParity versions removes the obsolete last-metrics cache
+and old preference keys. It does not upload their contents.
 
-Exports are created only when you select a copy or download control. JSON, CSS,
-Markdown, and TSV output contain measurements and breakpoint context only. They never
-include a URL, title, page content, or browsing history. Clipboard and downloaded Blob
-contents remain under your control.
+## Transmission, sharing, and exports
 
-## Permission purposes
+PixelParity does not send data to its developer, advertisers, analytics providers, or
+other servers. It does not sell data or use it for advertising, lending, or unrelated
+purposes. The extension makes no network requests and includes all executable code in
+its installed package. Its extension Content Security Policy blocks network
+connections with `connect-src 'none'`.
 
-- `activeTab` provides temporary access to the tab on which you invoke the extension.
-  Chrome revokes that access on a cross-origin navigation or when the tab closes.
-- `scripting` injects the packaged, isolated measurement bridge after that explicit
-  invocation.
-- `storage` saves only the preferences listed above.
-- `sidePanel` opens the tab-scoped live inspector when you select its popup button.
+Copy and save operations happen only when you select their controls. JSON, CSS,
+Markdown, TSV, and element-measurement exports contain the measurements described
+above. PNG exports contain the website image you requested. There is no automatic
+upload, cloud gallery, or sharing service. You decide where exported data goes next.
 
-PixelParity requests no permanent website access and no host, browsing-history,
-identity, clipboard, downloads, debugger, or externally connectable permission.
+## Why these permissions are needed
 
-## Retention and control
+| Permission | Purpose |
+| --- | --- |
+| `activeTab` | Temporary, user-initiated access to inspect and capture the selected tab |
+| `scripting` | Inject packaged, isolated helpers for measurements, overlays, region selection, and capture preparation |
+| `storage` | Store only the extension preferences listed above |
+| `sidePanel` | Display live tools and screenshot previews beside the inspected page |
 
-You can change saved preferences in the popup and remove all extension data by
-uninstalling PixelParity. Chrome Sync controls, including whether extension settings
-sync between browsers, are available in Chrome’s own sync settings. PixelParity has no
-server-side record to access or delete.
+PixelParity requests no permanent host access, browsing-history, identity, `tabs`,
+clipboard, downloads, or debugger permission. Chrome ends the temporary website grant
+on cross-origin navigation or when the tab closes.
+
+PixelParity’s use of data obtained through Chrome APIs complies with the Chrome Web
+Store User Data Policy, including its Limited Use requirements.
+
+## Your controls
+
+Turn off guides or end element picking in the Layout tools. Cancel an active capture
+or discard its preview. Close the panel to release its in-memory data. Change saved
+preferences through PixelParity's settings, and use Chrome's settings to control
+extension-preference synchronization. Uninstalling PixelParity removes its extension
+storage. There is no developer-held record to request or delete.
 
 ## Changes and contact
 
-Material changes to this policy will be versioned with the source and reflected in an
-extension update before new handling begins.
+Changes to data handling are documented in this policy alongside the corresponding
+extension release.
 
-For privacy questions, contact **arslan.abdallah@gmail.com** or open an issue at
-[github.com/aaarslan/pixelparity/issues](https://github.com/aaarslan/pixelparity/issues).
-Security reports should follow [SECURITY.md](SECURITY.md).
+For privacy questions, contact **arslan.abdallah@gmail.com**. For a security concern,
+follow the private reporting guidance in [SECURITY.md](SECURITY.md).

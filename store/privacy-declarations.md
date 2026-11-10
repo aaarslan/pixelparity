@@ -1,56 +1,94 @@
-# Chrome Web Store Privacy Declarations — v2.0.0
+# Chrome Web Store Privacy Declarations — PixelParity 3.0.0
 
-Use this file as the source of truth when completing the Store Privacy tab.
+These declarations describe the v3 source. Dashboard entry and final submission are
+tracked separately in [release-checklist.md](release-checklist.md).
 
 ## Single purpose
 
-PixelParity measures and explains viewport, display, browser zoom, and responsive
-breakpoint properties for the tab on which the user explicitly invokes it.
+PixelParity helps developers, designers, and QA engineers inspect and document website
+layouts through live measurements, alignment guides, element geometry, and local
+screenshots of the tab they explicitly invoke.
 
-## Data-use declaration
+## Website-content disclosure
 
-- Collected user data: **No**
-- Sold or transferred user data: **No**
-- Used for advertising, credit, or unrelated purposes: **No**
-- Remote code: **No**
-- External network requests: **No**
+PixelParity processes website content locally when the user requests a screenshot.
+It also reads computed element layout values for the requested inspection. No data is
+sent to the developer or another server. There are no analytics, accounts, tracking,
+ads, remote code, or extension network requests.
 
-PixelParity does transiently process browser-exposed display properties on the user’s
-device to provide its stated feature. Those metrics are not transmitted or persisted.
-The privacy policy discloses this local processing. Page URL, title, content, form
-values, history, cookies, and identity are not included in the snapshot model.
+Declare **Website content** in the dashboard's user-data handling categories. Do not
+claim that screenshots involve no use of website content. Google's
+[User Data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)
+requires disclosure even when data is processed or stored only on the user's device.
+The exact dashboard fields should be checked against their displayed definitions.
 
-Only user-created extension preferences are stored in `chrome.storage.sync`; Chrome
-may sync them when the user enables Chrome Sync. The developer does not receive them.
+| Data or practice | Actual behavior |
+| --- | --- |
+| Website content | Rendered pixels are processed locally on explicit capture; computed layout properties support element inspection. |
+| Developer/server collection | None. |
+| Automatic upload or sharing | None. Copying and saving happen only through user-selected controls. |
+| Browsing-history collection | None. Tab/window identifiers are transient routing context, not a browsing log. |
+| Accounts, identifiers, analytics | None. No login or telemetry. |
+| Stored preferences | Theme, density, breakpoint profiles, and export format in Chrome Sync; synchronization follows the user's Chrome settings. |
+| Stored screenshots or measurements | No persistent extension storage. Previews and measurements remain in memory. |
+| Sale or transfer to third parties | None. |
+| Use for advertising, credit, or unrelated purposes | None. |
+| Remote code | No. All executable code is packaged. |
+
+PNG exports contain the visible content the user chose. Measurement exports exclude
+URLs, titles, element text, form values, and browsing history. Saved files and copied
+images remain under the user's control after leaving the extension UI.
 
 ## Permission justifications
 
 ### activeTab
 
-Provides temporary, user-initiated access to the active tab so PixelParity can inspect
-display metrics without permanent host permissions. Access ends according to Chrome’s
-`activeTab` lifecycle.
+Provides temporary, user-initiated access to the tab on which PixelParity is invoked.
+This enables responsive measurements, alignment guides, element inspection, and
+explicitly requested screenshots using `captureVisibleTab`, without permanent access
+to websites. Chrome revokes the grant on cross-origin navigation or closing the tab.
 
 ### scripting
 
-Dynamically injects the packaged `bridge.js` in an isolated world after invocation.
-The bridge returns only the whitelisted metric contract and contains no remote code.
+Injects only packaged, isolated page helpers after invocation: `bridge.js` for numeric
+metrics, `overlay.js` for grids/rulers and computed element geometry, and
+`capture-bridge.js` for visible-region selection, dimensions, temporary page
+preparation, scrolling, and cleanup. No remote code or page-script execution is used.
 
 ### storage
 
-Stores only theme, density, active breakpoint profile, custom breakpoint profiles, and
-default export format. Storage access is restricted to trusted extension contexts.
+Saves theme, density, active and custom breakpoint profiles, and preferred measurement
+export format. Access is limited to trusted extension contexts. Screenshots,
+measurements, baselines, and overlay settings are not written to Chrome storage.
 
 ### sidePanel
 
-Opens the persistent live-inspection UI for the invoked tab after the user selects
-“Open live inspector” in the popup.
+Displays the tab-scoped inspection tools and local screenshot preview after the user
+opens the live inspector from the popup.
 
-## Certification checks
+## Remote-code declaration
 
-- The privacy policy link resolves on the public default branch.
-- The uploaded ZIP matches version 2.0.0 in both `manifest.json` and `package.json`.
-- Dashboard declarations, listing copy, and `PRIVACY.md` use the same language.
+**No, I am not using remote code.**
+
+The extension bundles its executable code and uses `connect-src 'none'`.
+`data:` and `blob:` image sources are used solely for local screenshot decoding and
+preview. There are no remotely hosted scripts, WebAssembly modules, or telemetry SDKs.
+
+## Limited-use certifications
+
+The extension's behavior supports all three certifications:
+
+- User data is not sold or transferred to third parties.
+- User data is used only for the disclosed layout-inspection and capture functionality.
+- User data is not used or transferred to determine creditworthiness or for lending.
+
+## Consistency checks before submission
+
+- The public privacy-policy URL resolves to the v3 policy.
+- The ZIP, manifest, package metadata, and store description identify version 3.0.0.
+- Dashboard disclosure, listing text, and `PRIVACY.md` all explain local website-content
+  processing and user-directed exports.
+- Only `activeTab`, `scripting`, `storage`, and `sidePanel` appear as permissions.
 - No host permissions, externally connectable endpoints, or web-accessible resources
   are present.
-- The ZIP contains no source maps, remote URLs, telemetry SDKs, or marketing images.
+- The final package passes the runtime allowlist and network/remote-code checks.

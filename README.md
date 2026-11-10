@@ -1,177 +1,178 @@
-# PixelParity — Viewport & Display Metrics
+# PixelParity — Layout, Grid & Capture
 
-[![Version](https://img.shields.io/badge/version-2.0.0-2563eb)](CHANGELOG.md)
-[![Manifest](https://img.shields.io/badge/Manifest-V3-0f766e)](manifest.json)
-[![License](https://img.shields.io/badge/license-MIT-15803d)](LICENSE)
+**Inspect the layout. Check the alignment. Capture the evidence.**
 
-PixelParity is a privacy-first Chrome extension for inspecting viewport, display,
-browser zoom, and responsive-layout metrics. It provides a compact one-click
-snapshot and a tab-scoped live side panel without permanent website access.
+PixelParity is a Chrome extension for frontend developers, designers, and QA engineers.
+Bring live viewport measurements, adjustable page grids, element inspection, and local
+screenshots into one tab-scoped side panel.
 
-[Install PixelParity from the Chrome Web Store](https://chromewebstore.google.com/detail/pixelparity-precision-dis/nobkjipoljcbnldmicopkjkbinggcipa)
+[Chrome Web Store](https://chromewebstore.google.com/detail/nobkjipoljcbnldmicopkjkbinggcipa)
+· [Privacy](PRIVACY.md) · [Changelog](CHANGELOG.md)
+· [Report an issue](https://github.com/aaarslan/pixelparity/issues)
 
-## What v2 includes
+![PixelParity — Inspect. Align. Capture.](store/assets/promos/marquee-1400x560.png)
 
-- Compact popup with layout viewport, authoritative Chrome tab zoom, device pixel
-  ratio, and active breakpoint
-- Live side panel for resize, visual-viewport, orientation, document-size, and zoom
-  changes
-- Layout and visual viewport, outer window, scrollbar, screen and available screen
-  in CSS pixels, document extent, typography, display, and media-environment metrics
-- In-memory baseline comparison with live numeric deltas
-- PixelParity Classic and Tailwind-style presets plus up to 10 synced custom
-  profiles with 12 breakpoints each
-- Versioned JSON, CSS custom property, Markdown table, and TSV exports
-- Light, dark, and system themes; comfortable and compact densities
-- Keyboard-accessible controls, visible focus, live status announcements,
-  forced-colors support, and reduced-motion behavior
-- No accounts, telemetry, analytics, external requests, remote code, page metadata,
-  or persisted measurements
+**3.0.0 release candidate:** implementation and local checks are complete. Installed-Chrome
+qualification, five new product screenshots, and Web Store submission remain pending.
+See the [release checklist](store/release-checklist.md) for the exact evidence and status.
 
-Element rulers, page overlays, screenshots, device emulation, and automatic window
-resizing are intentionally outside the extension’s single purpose.
+## Your layout toolkit
 
-## Install for development
+| Tool | What it helps you do |
+| --- | --- |
+| **Live inspection** | Follow layout and visual viewports, browser zoom, DPR, screen dimensions, typography, and responsive breakpoints. |
+| **Grid overlays** | Check alignment with column, square, or baseline grids. Tune columns, gutters, margins, maximum width, spacing, color, and opacity. Toggle them off at any time. |
+| **Rulers and element inspection** | Read CSS-pixel coordinates, bounds, margin, padding, border, gap, font size, and line height. Click an element to hold its measurement. |
+| **Local screenshots** | Capture the visible viewport, a selected visible region, or the full main document. Preview, copy, or save a PNG. |
+| **Baseline comparison** | Keep a working layout in memory, reproduce a responsive mismatch, and inspect numeric differences. |
+| **Developer exports** | Copy JSON, CSS variables, Markdown, TSV, an element measurement, or an issue-ready comparison. Download JSON locally. |
+| **Breakpoint profiles** | Use PixelParity Classic, Tailwind-style, or up to 10 custom profiles with 12 breakpoints each. |
 
-PixelParity 2.0 requires Chrome 116 or newer and Node.js 22.12 or newer for local
-development.
+Light, dark, and system themes; comfortable and compact spacing; keyboard-accessible
+controls; visible focus; reduced-motion and forced-colors support.
+
+## A useful five-minute workflow
+
+1. Open a website and select **PixelParity** in the Chrome toolbar.
+2. Check the popup, then select **Open live inspector**.
+3. In **Inspect**, set a baseline before resizing or changing browser zoom.
+4. In **Layout**, switch on a grid or rulers and inspect the alignment and spacing.
+5. In **Capture**, choose a viewport, region, or full-page PNG. Choose whether to
+   include PixelParity overlays; full-page capture also offers sticky/fixed-element
+   handling.
+6. In **Export**, copy the measurements or issue-ready comparison into your issue.
+
+Grids and rulers let normal page interaction continue. Element picking temporarily
+intercepts clicks so you can select a target. Press **Escape** to leave element picking;
+press it again to clear the remaining guides.
+
+Region capture supports dragging, arrow keys to move the selection, **Shift + arrows**
+to resize, **Enter** to capture, and **Escape** to cancel.
+
+## Local by design
+
+PixelParity has no accounts, analytics, telemetry, ads, tracking, remote code, or
+extension network requests. It runs only after you invoke it for a tab.
+
+Measurements, overlays, and screenshot previews are processed on your device. Page
+content is read when you request a screenshot; that content is never uploaded to the
+developer or a server. Previews stay in panel memory until discarded, replaced, or the
+panel closes. Saving or copying creates an export; it does not discard the preview.
+Saved files and clipboard contents remain under your control.
+
+Measurement exports exclude page URLs, titles, element text, form values, and browsing
+history. A screenshot contains the visible website content you choose to capture.
+
+Only theme, density, breakpoint profiles, and the preferred export format are saved in
+Chrome Sync. Google may synchronize those preferences according to your browser
+settings. Overlay settings, measurements, baselines, and screenshots are not synced.
+See the [privacy policy](PRIVACY.md) for handling and retention details.
+
+### Four focused permissions
+
+| Permission | Purpose |
+| --- | --- |
+| `activeTab` | Temporary access to the tab where you invoke PixelParity, including user-requested screenshots. |
+| `scripting` | Inject packaged, isolated measurement, overlay, and capture helpers into that tab. |
+| `storage` | Save extension preferences only. |
+| `sidePanel` | Keep the inspector beside the page you are checking. |
+
+No permanent host access, browsing-history, `tabs`, `downloads`, clipboard, or debugger
+permission is requested. No background service worker is required.
+
+## Development
+
+Requires **Chrome 116+** and **Node.js 22.12+**.
 
 ```bash
 npm ci
 npm run build
 ```
 
-Then open `chrome://extensions`, enable Developer mode, choose **Load unpacked**,
-and select the generated `dist` directory. Do not load the repository root.
+Open `chrome://extensions`, enable **Developer mode**, select **Load unpacked**, and
+choose `dist`.
 
-## Use PixelParity
-
-1. Open a normal website.
-2. Select PixelParity in the toolbar or use the assigned extension shortcut.
-3. Read the essential snapshot in the popup.
-4. Select **Open live inspector** for live updates, breakpoints, baselines, and
-   exports.
-
-The popup reads the shortcut Chrome actually assigned through `commands.getAll()`.
-If Chrome leaves the shortcut unassigned because of a conflict, PixelParity says so
-instead of displaying a hard-coded key combination.
-
-### Reproduce a responsive mismatch
-
-1. In **Inspect**, confirm the affected view's layout viewport, Chrome tab zoom, and
-   responsive range.
-2. Select **Set baseline** while the view is working.
-3. Resize the viewport and/or change Chrome's tab zoom until the mismatch appears.
-4. Open **Export** and select **Copy issue-ready report**. The Markdown report carries
-   baseline and reproduced viewport, zoom, visual-scale, DPR, and breakpoint values.
-
-The report intentionally excludes URLs, titles, and page content. Add the affected
-page, build, expected behavior, and observed behavior yourself before sharing it.
-
-## Permissions
-
-The manifest declares exactly four permissions:
-
-- `activeTab` — grants temporary access to the current tab only after explicit
-  invocation
-- `scripting` — injects the bundled, isolated measurement bridge into that tab
-- `storage` — saves preferences only in `chrome.storage.sync`
-- `sidePanel` — opens the live inspector for the invoked tab
-
-There are no host, `tabs`, clipboard, downloads, debugger, externally connectable,
-or web-accessible-resource permissions. The JSON download uses a user-created Blob,
-and clipboard writes occur only from extension UI actions.
-
-See [PRIVACY.md](PRIVACY.md) for the complete data-handling disclosure.
-
-## Architecture
-
-```text
-src/
-├── bridge/          # Isolated, dynamically injected page-measurement bridge
-├── components/      # Shared Preact presentation components
-├── popup/           # One-shot popup controller and UI
-├── shared/          # Contracts, breakpoints, storage, serializers, errors
-├── sidepanel/       # Live connection, baselines, profiles, and exports
-├── popup.html
-├── sidepanel.html
-└── styles.css
-```
-
-The popup injects `bridge.js` after the toolbar invocation, requests one whitelisted
-measurement object, and merges it with `chrome.tabs.getZoom()`. The side panel opens
-from the popup’s button, connects to the same temporary bridge, and starts observation
-only while visible. Resize and media events are throttled to at most 10 updates per
-second. Closing or hiding the panel stops observers; navigation destroys the bridge
-and clears any in-memory baseline.
-
-No background service worker is required. The strict extension CSP allows only
-bundled scripts and styles and blocks all network connections.
-
-## Data model and storage
-
-`MetricsSnapshotV2` stores numeric measurement values and derived breakpoint context.
-It has no URL, title, page-content, or history field. Measurements and baselines remain
-in extension-page memory only.
-
-`PreferencesV2` contains theme, density, active breakpoint profile, custom profiles,
-and default export format. It is the only kind of data saved in
-`chrome.storage.sync`, so Chrome may sync it between signed-in browsers when Chrome
-Sync is enabled. PixelParity stores a small preference index and one bounded record
-per custom profile so the full 10-profile limit stays below
-[Chrome Sync’s 8 KiB per-item quota](https://developer.chrome.com/docs/extensions/reference/api/storage#storage-areas).
-
-The idempotent v1 migration maps theme and compact mode, defaults existing users to
-PixelParity Classic, and deletes the old `pixelparity_last_metrics` cache without
-reading its stored value.
-
-## Validation and packaging
+### Local verification
 
 ```bash
-npm run format:check     # Biome formatting
-npm run lint             # Biome lint and unsafe-HTML gate
-npm run typecheck        # Strict TypeScript
-npm test                 # Unit, component, keyboard, live-region, and axe tests
-npm run build            # Explicit production runtime allowlist
-npm run test:e2e         # Real packaged-extension Chrome flow
-npm run build:pack       # Reproducible, version-matched ZIP
-npm run audit:ci         # Fails on high or critical dependency findings
+npm run check
+npm run test:e2e
 ```
 
-The final ZIP contains 12 allowlisted runtime files, has fixed entry timestamps and
-ordering, excludes source maps and store artwork, and fails above 150 KiB. Store
-screenshots and promos are generated from the shipping Preact components with
-`npm run assets:store`; the captioned demo is generated with
-`npm run assets:demo`.
+`check` runs formatting, lint, strict TypeScript, unit/component/accessibility tests,
+production packaging, and the dependency audit. The separate packaged-extension test
+runs the real Chrome flow using local fixture pages. Use `PIXELPARITY_HEADLESS=1` for a
+headless run; `PUPPETEER_EXECUTABLE_PATH` can select a compatible Chrome for Testing.
 
-CI runs formatting, linting, type checking, unit/component/accessibility tests,
-package verification, dependency auditing, reproducibility checks, and packaged
-extension E2E on Linux, macOS, and Windows.
+Individual commands: `npm test`, `npm run typecheck`, `npm run build:pack`,
+`npm run verify:package`, and `npm run audit`.
 
-`tests/fixtures/responsive-bug.html` is a local, deliberate navigation-overflow
-fixture. The packaged-extension test captures its wide baseline, narrows the
-viewport, changes tab zoom, and verifies the issue-report flow without accessing an
-external site.
+The ZIP includes only the runtime allowlist and excludes source maps, tests, and store
+artwork. Packaging uses Node built-ins, a fixed timestamp, sorted entries, and a
+150 KiB budget. Release evidence and store status belong in the
+[release checklist](store/release-checklist.md).
 
-## Limitations
+Run these gates locally before merging. GitHub Actions is disabled for this repository;
+there is no hosted CI workflow.
 
-- Chrome blocks injection on `chrome://` pages, the Chrome Web Store, and other
-  protected browser surfaces.
-- A cross-origin navigation revokes the temporary `activeTab` grant. The side panel
-  shows a reconnect state; it never asks for permanent host access.
-- Screen values are browser-exposed CSS pixels, not claims about a monitor’s physical
-  hardware resolution.
-- Browser zoom and device pixel ratio are separate inputs and may both affect the
-  rendered-pixel estimate.
+### Interface preview and store assets
 
-## Project material
+```bash
+npm run preview
+npm run assets:promos
+npm run assets:store
+```
 
-- [Changelog](CHANGELOG.md)
-- [Privacy policy](PRIVACY.md)
-- [Security policy](SECURITY.md)
-- [Store listing copy](store/listing.md)
-- [Reviewer instructions](store/reviewer-instructions.md)
-- [Release checklist](store/release-checklist.md)
+`preview` builds and serves the actual panel components beside a responsive local
+fixture at `http://127.0.0.1:8765`. It supports light/dark themes and panel widths from
+280 to 640 CSS pixels. The preview is clearly labeled and cannot call Chrome's
+screenshot API; install the extension for real capture testing.
 
-PixelParity is available under the [MIT License](LICENSE). Issues and feature requests
-belong in the [GitHub issue tracker](https://github.com/aaarslan/pixelparity/issues).
+`assets:promos` creates the 440×280 and 1400×560 brand images. `assets:store` requires
+a working headed Chrome for Testing and generates five actual 1280×800 product images
+from the installed extension. It verifies UI states and image dimensions, writes a
+provenance manifest, and replaces the screenshot set only after the full run succeeds.
+It cannot substitute mocked screenshots. Published v2 artwork is retained in
+`store/archive/v2` for reference and must not be uploaded as v3 imagery.
+
+### Code organization
+
+| Directory | Responsibility |
+| --- | --- |
+| `src/popup` | On-demand snapshot and entry into the live inspector |
+| `src/sidepanel` | Tab connection, live state, baseline, and tool navigation |
+| `src/bridge` | Isolated page metrics and visibility-aware observation |
+| `src/overlay` | Grid/ruler rendering and computed element measurements |
+| `src/capture` | Region selection, bounded capture, stitching, and page cleanup |
+| `src/shared` | Validated contracts, profiles, storage, formatting, and exports |
+| `src/components` | Shared presentation components |
+
+The extension CSP restricts scripts and styles to the installed package and blocks
+network connections with `connect-src 'none'`. Screenshots use local image data and
+Blob URLs. Helpers are injected on demand; screenshot data is kept in the extension
+UI rather than sent back into the website.
+
+## Practical limits
+
+- Chrome protects browser pages, the Web Store, and some built-in viewers from
+  inspection. After navigating to another origin, invoke PixelParity from the toolbar
+  again to restore its temporary access.
+- Full-page capture scrolls the main document. Nested scrolling areas, virtualized
+  lists, moving content, and lazy loading may affect the result. Capture a viewport or
+  region for those pages. Keep the target tab, window, viewport, and zoom unchanged
+  while capture runs.
+- Capture is bounded to **48 megapixels**, **32,760 pixels per dimension**, and
+  **40 frames**. Horizontally scrolling right-to-left documents and pinch-zoomed
+  capture are not supported.
+- Element inspection works in the main document. It does not traverse cross-origin
+  frames or closed shadow roots.
+- Measurements are browser-exposed CSS pixels. Rendered-pixel estimates are not a
+  measurement of a monitor's physical hardware resolution.
+
+## Project resources
+
+[Store listing](store/listing.md) · [Reviewer steps](store/reviewer-instructions.md) ·
+[Security policy](SECURITY.md) · [MIT license](LICENSE)
+
+Created by **Abdallah Arslan**. PixelParity 3.0.0 expands the original viewport inspector
+with a focused visual QA workflow while retaining its local processing model.

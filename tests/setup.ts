@@ -1,8 +1,8 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/preact";
 import { afterEach, vi } from "vitest";
-import { DEMO_PAGE_METRICS } from "../store/source/demo-data";
 import { MESSAGE_TYPES } from "../src/shared/protocol";
+import { DEMO_PAGE_METRICS } from "./fixtures/metrics";
 
 class TestMediaQueryList extends EventTarget implements MediaQueryList {
   readonly matches = false;
