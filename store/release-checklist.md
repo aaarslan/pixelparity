@@ -1,6 +1,34 @@
 # PixelParity 3.0.0 Release Checklist
 
-## Release status — November 10, 2026
+## Reconciliation — November 13, 2026
+
+The November 10 record below describes the original Linux audit. Later Mac work
+partially advanced the release; it did not complete every qualification item.
+
+| Item | Reconciled status |
+| --- | --- |
+| Public source and privacy policy | PR #4 merged as `014e0ce`; version 3 source and `PRIVACY.md` are on `main`. |
+| Installed extension | Later Mac session installed version 3 and captured its Inspect, Layout, and Capture surfaces. This is partial qualification, not a completed cross-platform E2E checklist. |
+| Product screenshots | Three 1280×800 PNGs exist in the local release kit: `01-inspect`, `02-layout`, and `03-capture`. The planned five-image set is incomplete. |
+| Developer dashboard | Later Mac session saved a **new listing draft**, ready for submission. This does not update the existing public listing. |
+| Version 3 submission / publication | **Not submitted; not published.** |
+| Existing public listing | Version **2.1.0**, updated September 12, 2026; checked November 13. The earlier 2.0.0 observation below is historical. |
+
+Evidence: `main` at `014e0ce`; the local `pixelparity-3.0.0-release-kit`
+archive and screenshot files; and the recorded later Mac installation/dashboard
+session. The ZIP remains 65,100 bytes with SHA-256
+`9209207e7ab418df4590566949b6c0144e7db905eac2cd0906b16ee78584060b`.
+The kit's `release-manifest.json` and original checklist retain their earlier Linux
+snapshot (including blocked browser checks); they are not evidence that the later
+Mac work completed the full checklist. No new extension execution or store
+submission was performed for this documentation reconciliation.
+
+[Existing public store listing](https://chromewebstore.google.com/detail/nobkjipoljcbnldmicopkjkbinggcipa).
+Before release, complete and record the outstanding qualification matrix, finish
+the planned screenshot set, and reconcile the intended new-versus-existing listing
+path. Submission and publication require separate confirmation.
+
+## Original Linux audit — November 10, 2026
 
 | Item | Status |
 | --- | --- |

@@ -12,8 +12,11 @@ screenshots into one tab-scoped side panel.
 
 ![PixelParity — Inspect. Align. Capture.](store/assets/promos/marquee-1400x560.png)
 
-**3.0.0 release candidate:** implementation and local checks are complete. Installed-Chrome
-qualification, five new product screenshots, and Web Store submission remain pending.
+**3.0.0 release candidate — status reconciled November 13, 2026:** local package
+checks passed, followed by a partial installed-Mac review and three product screenshots.
+A separate Web Store listing draft was saved but not submitted. The planned five-image
+set and full installed-extension qualification remain incomplete. The existing public
+listing still serves 2.1.0.
 See the [release checklist](store/release-checklist.md) for the exact evidence and status.
 
 ## Your layout toolkit
