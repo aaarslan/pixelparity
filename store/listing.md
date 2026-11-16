@@ -4,7 +4,11 @@
 
 | Field | Value |
 | --- | --- |
-| Existing item ID | `nobkjipoljcbnldmicopkjkbinggcipa` |
+| Canonical v3 item ID | `imkeldjbndhihjcniafdolkhcfbkglfd` |
+| Install URL | https://chromewebstore.google.com/detail/imkeldjbndhihjcniafdolkhcfbkglfd |
+| Legacy v2 item ID | `nobkjipoljcbnldmicopkjkbinggcipa` (separate public listing; 2.1.0) |
+| Public v3 status | 3.0.0; store updated November 11, 2026; verified November 16, 2026 |
+| Offered by | aaarslan |
 | Title | PixelParity — Layout, Grid & Capture |
 | Summary | Inspect responsive layouts, overlay grids and rulers, measure elements, and capture screenshots. Local tools. No telemetry. |
 | Category | Developer Tools |
@@ -13,8 +17,16 @@
 | Privacy policy | https://github.com/aaarslan/pixelparity/blob/main/PRIVACY.md |
 | Developer contact | arslan.abdallah@gmail.com |
 
-Title and summary must match the packaged English manifest messages. Update the
-existing listing; preserve its item ID and installed user base.
+Title and summary must match the packaged English manifest messages. The v3 listing
+is the documentation's canonical install target, matching the repository homepage.
+Both public items show the same developer name and contact, but the reason for the
+separate publication is unconfirmed. Do not assume an automatic migration between
+IDs. See [publication evidence and history](release-checklist.md).
+
+The copy and five-image order below remain the intended specification; public
+availability does not establish completion of the screenshot plan or runtime testing.
+Any package submission, listing deletion, or distribution change requires an exact
+proposed action and explicit owner approval first.
 
 ## Detailed description
 

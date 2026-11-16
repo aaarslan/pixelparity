@@ -2,7 +2,13 @@
 
 All notable PixelParity changes are documented here.
 
-## 3.0.0 — Unreleased
+## 3.0.0 — Published
+
+Verified November 16, 2026: the [v3 Web Store listing](https://chromewebstore.google.com/detail/imkeldjbndhihjcniafdolkhcfbkglfd)
+reports version 3.0.0 and an update date of November 11, 2026. That is the store's
+reported update date, not a verified submission or first-publication timestamp.
+The separate legacy item still serves 2.1.0. The published package's exact source
+commit and checksum have not been reconciled with the local release candidate.
 
 ### Added
 
@@ -42,7 +48,7 @@ All notable PixelParity changes are documented here.
 - Give dropdown indicators consistent insets and profile actions clearer spacing
 - Keep long profile names inside narrow panels and native controls in the chosen theme
 
-Release qualification, store submission, and publication remain tracked in
+Publication evidence, historical submission records, and outstanding qualification are tracked in
 [the release checklist](store/release-checklist.md).
 
 ## 2.0.0 — 2026-07-18
