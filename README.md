@@ -6,18 +6,20 @@ PixelParity is a Chrome extension for frontend developers, designers, and QA eng
 Bring live viewport measurements, adjustable page grids, element inspection, and local
 screenshots into one tab-scoped side panel.
 
-[Chrome Web Store](https://chromewebstore.google.com/detail/nobkjipoljcbnldmicopkjkbinggcipa)
+[Chrome Web Store](https://chromewebstore.google.com/detail/imkeldjbndhihjcniafdolkhcfbkglfd)
 · [Privacy](PRIVACY.md) · [Changelog](CHANGELOG.md)
 · [Report an issue](https://github.com/aaarslan/pixelparity/issues)
 
 ![PixelParity — Inspect. Align. Capture.](store/assets/promos/marquee-1400x560.png)
 
-**3.0.0 release candidate — status reconciled November 13, 2026:** local package
-checks passed, followed by a partial installed-Mac review and three product screenshots.
-A separate Web Store listing draft was saved but not submitted. The planned five-image
-set and full installed-extension qualification remain incomplete. The existing public
-listing still serves 2.1.0.
-See the [release checklist](store/release-checklist.md) for the exact evidence and status.
+**3.0.0 is published — verified November 16, 2026:** the current Web Store listing
+uses ID `imkeldjbndhihjcniafdolkhcfbkglfd` and reports an update date of November 11.
+The [legacy listing](https://chromewebstore.google.com/detail/nobkjipoljcbnldmicopkjkbinggcipa)
+still serves 2.1.0 under a separate ID; it is not the v3 install link, and an existing
+v2 installation does not become the new item automatically. The recorded full
+installed-extension qualification and planned five-image set remain incomplete.
+See the [release checklist](store/release-checklist.md) for publication evidence,
+listing identity, and outstanding verification.
 
 ## Your layout toolkit
 

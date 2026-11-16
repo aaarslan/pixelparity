@@ -1,6 +1,63 @@
 # PixelParity 3.0.0 Release Checklist
 
-## Reconciliation — November 13, 2026
+## Current publication status — verified November 16, 2026
+
+Version 3.0.0 is publicly available under a new item ID. The November 13 conclusion
+that v3 was unpublished was incomplete: it described the recorded draft session
+and the legacy item, not the separate live v3 listing. Use this section for current
+status; the dated records below are retained as historical evidence.
+
+| Public field | Canonical v3 listing | Legacy v2 listing |
+| --- | --- | --- |
+| Item ID | `imkeldjbndhihjcniafdolkhcfbkglfd` | `nobkjipoljcbnldmicopkjkbinggcipa` |
+| Title | PixelParity — Layout, Grid & Capture | PixelParity — Viewport & Display Metrics |
+| Version | 3.0.0 | 2.1.0 |
+| Store update date | November 11, 2026 | September 12, 2026 |
+| Offered by | aaarslan | aaarslan |
+| Developer contact | arslan.abdallah@gmail.com | arslan.abdallah@gmail.com |
+| Category / language | Developer Tools / English | Developer Tools / English |
+| Feature scope | Layout grids, rulers, element inspection, local screenshots, responsive metrics | Viewport/display metrics, baselines, breakpoint profiles, measurement exports |
+| Store privacy disclosure | Handles website content | Declares no data collection |
+| Support / privacy links | Repository issues / `main/PRIVACY.md` | Repository issues / `main/PRIVACY.md` |
+
+Sources, fetched directly from the public pages on November 16, 2026:
+
+- [v3 public listing](https://chromewebstore.google.com/detail/pixelparity-%E2%80%94-layout-grid/imkeldjbndhihjcniafdolkhcfbkglfd?hl=en)
+- [Legacy public listing](https://chromewebstore.google.com/detail/pixelparity-%E2%80%94-viewport-di/nobkjipoljcbnldmicopkjkbinggcipa?hl=en)
+- [Repository metadata](https://api.github.com/repos/aaarslan/pixelparity): `homepage`
+  points to `https://chromewebstore.google.com/detail/imkeldjbndhihjcniafdolkhcfbkglfd`.
+
+The new ID is the canonical **v3 documentation and installation target** because
+it serves v3 and matches the repository homepage. The matching public developer
+identity supports attribution to this project; it does not establish why a second
+item was created. Intentional separate distribution versus an accidental duplicate
+remains unconfirmed. These are distinct installations; legacy users must not be
+promised automatic migration or preference transfer to the new ID.
+
+### Publication evidence versus qualification evidence
+
+- **Verified:** both listings are public with the versions and details above.
+- **Unknown:** submission time, review history, first-publication time, distribution
+  settings, and the published package's exact source commit and archive checksum.
+  A store update date is not an observed submission confirmation. No dashboard was
+  inspected or changed for this reconciliation.
+- **Still incomplete in the recorded evidence:** full installed-extension
+  qualification and the planned five-image set. The later Mac record contains a
+  partial review and three screenshots; no new runtime or screenshot checks were
+  performed here. Public availability does not complete these checks.
+- **Historical only:** the 65,100-byte candidate ZIP and SHA-256 below identify the
+  locally verified artifact. They have not been matched to the live store package.
+
+Before any store mutation, show the owner the exact proposed action and obtain
+explicit approval. This includes deleting either item, changing distribution
+settings, or submitting another package. Do not upload to the legacy item merely
+because the historical plan below named it.
+
+## Historical reconciliation — November 13, 2026 (publication conclusion superseded)
+
+The following record is preserved as written. Its unpublished/draft conclusion
+is superseded by the November 16 public-listing verification above; it is not the
+current publication status or an instruction to submit v3 again.
 
 The November 10 record below describes the original Linux audit. Later Mac work
 partially advanced the release; it did not complete every qualification item.
@@ -97,7 +154,8 @@ visual verification is claimed for that screen.
 
 ## Remaining qualification
 
-Run from the review branch on a machine with a usable Chrome for Testing:
+These checks remain open despite public availability. Run from `main` on a machine
+with a usable Chrome for Testing, and record the tested commit and package identity:
 
 ```bash
 npm ci
@@ -126,13 +184,18 @@ be verified. It has no mocked screenshot fallback.
 - [ ] Confirm no extension-originated HTTP(S) requests or screenshot/measurement writes
   to persistent Chrome storage during the installed runtime journey.
 - [ ] Review all five generated 1280×800 screenshots and their provenance manifest.
-- [ ] Merge the verified source so the public privacy-policy URL serves the v3 policy.
+- [x] Merge the source and v3 privacy policy: PR #4 merged as `014e0ce`.
 
 Static packaging checks already confirm exactly `activeTab`, `scripting`, `storage`,
 and `sidePanel`; no permanent host access, service worker, remote executable code,
 or additional permissions were introduced. The CSP blocks extension network access.
 
-## Store update
+## Historical store-update plan — target superseded
+
+This was the original plan to update the legacy item. It was not evidence of
+execution. The separate v3 item is now public; do not execute this plan without
+first reconciling the intended target and obtaining explicit owner approval for
+the exact proposed store action.
 
 - [ ] Use existing item **`nobkjipoljcbnldmicopkjkbinggcipa`** under
   **arslan.abdallah@gmail.com**.
@@ -150,7 +213,10 @@ or additional permissions were introduced. The CSP blocks extension network acce
 - [ ] Record submission time and automatic versus deferred publication choice.
 - [ ] Verify the live version after approval and publication.
 
-## Submission record
+## Original Linux submission record — November 10, 2026 (historical)
+
+This table records the original session only. It does not describe current public
+availability; see the November 16 verification above.
 
 | Evidence | Value |
 | --- | --- |
